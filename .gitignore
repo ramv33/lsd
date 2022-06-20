@@ -1,0 +1,8 @@
+*.o
+# executable files
+client
+server
+p
+# certificate
+cert.pem
+key.pem
