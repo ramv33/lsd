@@ -61,11 +61,11 @@ static unsigned char *unpack_int16(unsigned char buf[2], uint16_t *num)
 
 /*
  * struct request {
- * 	uint64_t	when;
- * 	uint32_t	req_type;
- * 	uint32_t	timer;
- * 	uint16_t	msg_size;
- * 	unsigned char	*msg;
+ * 	when;
+ * 	timer;
+ * 	req_type;
+ * 	msg_size;
+ * 	*msg;		// variable part
  * };
  */
 size_t request_struct_fixedsize(void)
@@ -78,9 +78,9 @@ size_t request_struct_fixedsize(void)
 
 /*
  * struct sstate {
- * 	int64_t		when;
- * 	uint32_t	powcmd;
- * 	uint32_t	timer;
+ * 	when;
+ * 	timer;
+ * 	powcmd;
  * }
  */
 size_t sstate_struct_size(void)
@@ -95,12 +95,13 @@ size_t sstate_struct_size(void)
  * 	The character array is dynamically allocated and has to be freed by the caller.
  * 	$size  is set to the size of the array.
  *
- * 	struct request fields are:
+ * 	struct request {
  * 		uint64_t	when;
- * 		uint32_t	req_type;
- * 		uint32_t	timer;
- * 		uint16_t	msg_size;
+ * 		int32_t		timer;
+ * 		uint16_t	req_type;
+ * 		int16_t		msg_size;
  * 		char		*msg;
+ * 	}
  */
 unsigned char *pack_request(struct request *req, size_t *size)
 {
@@ -116,8 +117,8 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	ret = buf;
 	/* pack_* returns the next address in the buffer after packing */
 	buf = pack_int64(buf, req->when);
-	buf = pack_int32(buf, req->req_type);
 	buf = pack_int32(buf, req->timer);
+	buf = pack_int16(buf, req->req_type);
 	buf = pack_int16(buf, req->msg_size);
 	strncpy(buf, req->msg, req->msg_size);
 
@@ -136,16 +137,16 @@ void unpack_request_fixed(struct request *req, unsigned char *reqbuf)
 {
 	/* unpack_* returns the next address in the buffer after unpacking */
 	reqbuf = unpack_int64(reqbuf, &req->when);
-	reqbuf = unpack_int32(reqbuf, &req->req_type);
 	reqbuf = unpack_int32(reqbuf, &req->timer);
+	reqbuf = unpack_int16(reqbuf, &req->req_type);
 	reqbuf = unpack_int16(reqbuf, &req->msg_size);
 }
 
 /*
  * struct sstate contains the following fields:
  * 	int64_t		when;
- * 	uint32_t	powcmd;
- * 	uint32_t	timer;
+ * 	int32_t		timer;
+ * 	uint16_t	powcmd;
  */
 void pack_sstate(struct sstate *res, char resbuf[], size_t size)
 {
@@ -153,18 +154,18 @@ void pack_sstate(struct sstate *res, char resbuf[], size_t size)
 	if (size < s)
 		return;
 	resbuf = pack_int64(resbuf, res->when);
-	resbuf = pack_int32(resbuf, res->powcmd);
-	pack_int32(resbuf, res->timer);
+	resbuf = pack_int32(resbuf, res->timer);
+	pack_int16(resbuf, res->powcmd);
 }
 
 void unpack_sstate(struct sstate *res, char resbuf[])
 {
 	resbuf = unpack_int64(resbuf, &res->when);
-	resbuf = unpack_int32(resbuf, &res->powcmd);
-	unpack_int32(resbuf, &res->timer);
+	resbuf = unpack_int32(resbuf, &res->timer);
+	unpack_int16(resbuf, &res->powcmd);
 }
 
-int parse_request(uint32_t *reqtype, char *reqstr)
+int parse_request(uint16_t *reqtype, char *reqstr)
 {
 	if (!strcasecmp("SHUTDOWN", reqstr)) {
 		*reqtype = REQ_POW_SHUTDOWN;

@@ -8,16 +8,16 @@
  */
 struct request {
 	int64_t		when;		/* time client sent the request */
-	uint32_t	req_type;
 	int32_t		timer;		/* timer for power commands */
+	uint16_t	req_type;
 	int16_t		msg_size;
 	unsigned char	*msg;		/* optional nul-terminated string */
 };
 
 struct sstate {
 	int64_t		when;		/* when the power command was scheduled */
-	uint32_t	powcmd;		/* type of scheduled power command */
-	uint32_t	timer;		/* timer for power command */
+	int32_t		timer;		/* timer for power command */
+	uint16_t	powcmd;		/* type of scheduled power command */
 };
 
 /*
@@ -43,7 +43,7 @@ struct sstate {
 #define RES_DISABLED		0x0000000a	/* request is disabled in server config */
 
 /* parse_request:	Store request code in *$reqtype */
-int parse_request(uint32_t *reqtype, char *reqstr);
+int parse_request(uint16_t *reqtype, char *reqstr);
 
 /*
  * pack_request:
