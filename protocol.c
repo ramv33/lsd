@@ -108,7 +108,7 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	/* size needed for buffer is the fixed size + size of message */
 	unsigned char *buf, *ret;
 
-	*size = request_struct_fixedsize() + req->msg_size;
+	*size = request_struct_fixedsize() + req->msg_size + 1;
 	buf = malloc(*size);
 	if (buf == NULL) {
 		*size = 0;
@@ -120,7 +120,7 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	buf = pack_int32(buf, req->timer);
 	buf = pack_int16(buf, req->req_type);
 	buf = pack_int16(buf, req->msg_size);
-	strncpy(buf, req->msg, req->msg_size);
+	strncpy(buf, req->msg, req->msg_size+1);
 
 	return ret;
 }
