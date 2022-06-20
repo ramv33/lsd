@@ -8,4 +8,6 @@
 #	define PDEBUG(fmt, args...)	/* not debugging: do nothin */
 #endif /* endif DEBUG */
 
+#define DEFAULT_PORT	6969
+
 #endif /* ifndef COMMON_H */

@@ -8,7 +8,8 @@
 #include <openssl/err.h>
 #include <getopt.h>
 
-#define	DEFAULT_PORT	6969
+#include "common.h"
+
 #define BUFFSIZE	2048
 #define RXBUF_SIZE	BUFFSIZE
 #define TXBUF_SIZE	BUFFSIZE
