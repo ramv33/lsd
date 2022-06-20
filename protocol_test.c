@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include "common.h"
 #include "protocol.h"
 #include "protocol.h"
 
@@ -47,14 +49,16 @@ int request_pack_unpack_test(void)
 		req.when, req.req_type, req.timer, req.msg_size);
 	char *reqbuf = pack_request(&req, &size);
 
-	//printf("\nwhen = %lld\n"
-	//	"req_type = %x\n"
-	//	"timer = %x\n"
-	//	"msg_size = %d\n",
-	//	req.when, req.req_type, req.timer, req.msg_size);
+	PDEBUG("REQUEST\n=======\n");
+	PDEBUG("\nwhen = %lld\n"
+		"req_type = %x\n"
+		"timer = %x\n"
+		"msg_size = %d\n",
+		req.when, req.req_type, req.timer, req.msg_size);
 
-//	for (int i = 0; i < size; ++i)
-//		printf("%02hhx ", reqbuf[i]);
+	for (int i = 0; i < size; ++i)
+		PDEBUG("%02hhx ", reqbuf[i]);
+	PDEBUG("\n=========\n");
 
 	unpack_request_fixed(&req, reqbuf);
 	sprintf(after, "%lld %x %x %d",
@@ -76,8 +80,8 @@ int sstate_pack_unpack_test(void)
 
 	sprintf(before, "%ld %x %x", s.when, s.powcmd, s.timer);
 	pack_sstate(&s, sbuf, SSTATE_SIZE);
-//	for (int i = 0; i < SSTATE_SIZE; ++i)
-//		printf("%02hhx ", sbuf[i]);
+	for (int i = 0; i < SSTATE_SIZE; ++i)
+		PDEBUG("%02hhx ", sbuf[i]);
 	unpack_sstate(&s, sbuf);
 	sprintf(after, "%ld %x %x", s.when, s.powcmd, s.timer);
 	return !strcmp(before, after);
