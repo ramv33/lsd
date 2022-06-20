@@ -73,7 +73,8 @@ int main(int argc, char *argv[])
 		".when = %ld\n.req_type = %x\n"
 		".timer = %d\n.msg_size = %d\n"
 		".msg = '%s'\n",
-		req.when, req.req_type, req.timer, req.msg_size, req.msg);
+		req.when, req.req_type, req.timer, req.msg_size,
+		(req.msg_size != 0) ? req.msg : "");
 	sockfd = create_socket(AF_INET, argopts.broadcast);
 	send_request(sockfd, &req, addrs, count);
 out:
