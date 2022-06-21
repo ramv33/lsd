@@ -79,6 +79,7 @@ size_t request_struct_fixedsize(void)
 /*
  * struct sstate {
  * 	when;
+ * 	issued_at;
  * 	timer;
  * 	powcmd;
  * }
@@ -87,7 +88,7 @@ size_t sstate_struct_size(void)
 {
 	struct sstate r;
 
-	return sizeof(r.when) + sizeof(r.powcmd) + sizeof(r.timer);
+	return sizeof(r.when) + sizeof(r.issued_at) + sizeof(r.powcmd) + sizeof(r.timer);
 }
 /*
  * pack_request:
@@ -154,6 +155,7 @@ void pack_sstate(struct sstate *res, char resbuf[], size_t size)
 	if (size < s)
 		return;
 	resbuf = pack_int64(resbuf, res->when);
+	resbuf = pack_int64(resbuf, res->issued_at);
 	resbuf = pack_int32(resbuf, res->timer);
 	pack_int16(resbuf, res->powcmd);
 }
@@ -161,6 +163,7 @@ void pack_sstate(struct sstate *res, char resbuf[], size_t size)
 void unpack_sstate(struct sstate *res, char resbuf[])
 {
 	resbuf = unpack_int64(resbuf, &res->when);
+	resbuf = unpack_int64(resbuf, &res->issued_at);
 	resbuf = unpack_int32(resbuf, &res->timer);
 	unpack_int16(resbuf, &res->powcmd);
 }

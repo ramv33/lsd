@@ -16,6 +16,7 @@ struct request {
 
 struct sstate {
 	int64_t		when;		/* when the power command was scheduled */
+	int64_t		issued_at;
 	int32_t		timer;		/* timer for power command */
 	uint16_t	powcmd;		/* type of scheduled power command */
 };
