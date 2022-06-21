@@ -121,7 +121,8 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	buf = pack_int32(buf, req->timer);
 	buf = pack_int16(buf, req->req_type);
 	buf = pack_int16(buf, req->msg_size);
-	strncpy(buf, req->msg, req->msg_size+1);
+	if (req->msg_size > 0)
+		strncpy(buf, req->msg, req->msg_size+1);
 
 	return ret;
 }
