@@ -1,6 +1,6 @@
 DEBUG = y
 
-OBJS = dtls.o protocol.o addr.o
+OBJS = protocol.o addr.o common.h
 LIBS = -lssl -lcrypto
 
 ifeq ($(DEBUG), y)
@@ -11,11 +11,9 @@ endif
 
 all: server client
 
-server: dtls.h $(OBJS) $(LIBS)
+server:  $(OBJS) $(LIBS)
 
-client: dtls.h $(OBJS) $(LIBS)
-
-dtls.o: dtls.h
+client: $(OBJS) $(LIBS)
 
 protocol.o: protocol.h
 
