@@ -12,10 +12,10 @@ endif
 all: server client
 
 server: $(OBJS) $(LIBS) common.h
-	cc $(OBJS) $(LIBS) server.c -o server
+	cc $(CFLAGS) $(OBJS) $(LIBS) server.c -o server
 
 client: $(OBJS) $(LIBS) common.h
-	cc $(OBJS) $(LIBS) client.c -o client
+	cc $(CFLAGS) $(OBJS) $(LIBS) client.c -o client
 
 protocol.o: protocol.h
 
