@@ -35,7 +35,7 @@ main(void)
 
 int request_pack_unpack_test(void)
 {
-	char before[128], after[128];
+	char before[256], after[256];
 	time_t t = time(NULL);
 	struct request req = {
 		.when = t,
@@ -71,18 +71,19 @@ int request_pack_unpack_test(void)
 int sstate_pack_unpack_test(void)
 {
 	char sbuf[SSTATE_SIZE];
-	char before[128], after[128];
+	char before[256], after[256];
 	struct sstate s = {
 		.when = time(NULL),
+		.issued_at = time(NULL),
 		.powcmd = 0xdead,
 		.timer = 0x12345678
 	};
 
-	sprintf(before, "%ld %x %x", s.when, s.powcmd, s.timer);
+	sprintf(before, "%ld %ld %x %x", s.when, s.issued_at, s.powcmd, s.timer);
 	pack_sstate(&s, sbuf, SSTATE_SIZE);
 	for (int i = 0; i < SSTATE_SIZE; ++i)
 		PDEBUG("%02hhx ", sbuf[i]);
 	unpack_sstate(&s, sbuf);
-	sprintf(after, "%ld %x %x", s.when, s.powcmd, s.timer);
+	sprintf(after, "%ld %x %x", s.when, s.issued_at, s.powcmd, s.timer);
 	return !strcmp(before, after);
 }
