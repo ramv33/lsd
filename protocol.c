@@ -82,13 +82,15 @@ size_t request_struct_fixedsize(void)
  * 	issued_at;
  * 	timer;
  * 	powcmd;
+ * 	ack;
  * }
  */
 size_t sstate_struct_size(void)
 {
-	struct sstate r;
+	struct sstate s;
 
-	return sizeof(r.when) + sizeof(r.issued_at) + sizeof(r.powcmd) + sizeof(r.timer);
+	return sizeof(s.when) + sizeof(s.issued_at) + sizeof(s.powcmd) + sizeof(s.timer)
+		+ sizeof(s.ack);
 }
 /*
  * pack_request:
@@ -158,7 +160,8 @@ void pack_sstate(struct sstate *res, char resbuf[], size_t size)
 	resbuf = pack_int64(resbuf, res->when);
 	resbuf = pack_int64(resbuf, res->issued_at);
 	resbuf = pack_int32(resbuf, res->timer);
-	pack_int16(resbuf, res->powcmd);
+	resbuf = pack_int16(resbuf, res->powcmd);
+	resbuf = pack_int16(resbuf, res->ack);
 }
 
 void unpack_sstate(struct sstate *res, char resbuf[])
@@ -166,26 +169,28 @@ void unpack_sstate(struct sstate *res, char resbuf[])
 	resbuf = unpack_int64(resbuf, &res->when);
 	resbuf = unpack_int64(resbuf, &res->issued_at);
 	resbuf = unpack_int32(resbuf, &res->timer);
-	unpack_int16(resbuf, &res->powcmd);
+	resbuf = unpack_int16(resbuf, &res->powcmd);
+	resbuf = unpack_int16(resbuf, &res->ack);
 }
 
 int parse_request(uint16_t *reqtype, char *reqstr)
 {
-	if (!strcasecmp("SHUTDOWN", reqstr)) {
+	if (!strcasecmp("SHUTDOWN", reqstr))
 		*reqtype = REQ_POW_SHUTDOWN;
-	} else if (!strcasecmp("REBOOT", reqstr)) {
+	else if (!strcasecmp("REBOOT", reqstr))
 		*reqtype = REQ_POW_REBOOT;
-	} else if (!strcasecmp("STANDBY", reqstr)) {
+	else if (!strcasecmp("STANDBY", reqstr))
 		*reqtype = REQ_POW_STANDBY;
-	} else if (!strcasecmp("SLEEP", reqstr)) {
+	else if (!strcasecmp("SLEEP", reqstr))
 		*reqtype = REQ_POW_SLEEP;
-	} else if (!strcasecmp("HIBERNATE", reqstr)) {
+	else if (!strcasecmp("HIBERNATE", reqstr))
 		*reqtype = REQ_POW_HIBERNATE;
-	} else if (!strcasecmp("NOTIFY", reqstr)) {
+	else if (!strcasecmp("ABORT", reqstr))
+		*reqtype = REQ_POW_ABORT;
+	else if (!strcasecmp("NOTIFY", reqstr))
 		*reqtype = REQ_NOTIFY;
-	} else if (!strcasecmp("QUERY", reqstr)) {
+	else if (!strcasecmp("QUERY", reqstr))
 		*reqtype = REQ_QUERY;
-	} else {
+	else
 		return -1;
-	}
 }

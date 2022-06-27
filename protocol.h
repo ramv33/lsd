@@ -19,6 +19,7 @@ struct sstate {
 	int64_t		issued_at;
 	int32_t		timer;		/* timer for power command */
 	uint16_t	powcmd;		/* type of scheduled power command */
+	uint16_t	ack;
 };
 
 /*
@@ -31,17 +32,21 @@ struct sstate {
 #define	REQ_POW_STANDBY		0x00000003
 #define	REQ_POW_SLEEP		0x00000004
 #define	REQ_POW_HIBERNATE	0x00000005
+#define REQ_POW_ABORT		0x00000006
 /* send notification to desktop */
-#define	REQ_NOTIFY		0x00000006
+#define	REQ_NOTIFY		0x00000007
 /* query commands */
-#define	REQ_QUERY		0x00000007	/* get shutdown timer on server */
+#define	REQ_QUERY		0x00000008	/* get shutdown timer on server */
 
+#define SET_FORCE_BIT(reqtype)		((reqtype) = ((1 << 31) | (reqtype)))
+#define RESET_FORCE_BIT(reqtype)	((reqtype) = (~(1 << 31) & (reqtype)))
+#define GET_FORCE_BIT(reqtype)		((reqtype) & (1 << 31))
 /*
  * server sstates
  */
-#define	RES_GRANTED		0x00000008
-#define	RES_DENIED		0x00000009
-#define RES_DISABLED		0x0000000a	/* request is disabled in server config */
+#define	ACK_GRANTED		0x0000
+#define	ACK_DENIED		0x0001
+#define ACK_DISABLED		0x0002		/* request is disabled in server config */
 
 /* parse_request:	Store request code in *$reqtype */
 int parse_request(uint16_t *reqtype, char *reqstr);
