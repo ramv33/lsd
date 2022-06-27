@@ -1,6 +1,6 @@
 DEBUG = y
 
-OBJS = protocol.o addr.o
+OBJS = protocol.o addr.o power.o
 LIBS = -lssl -lcrypto
 
 ifeq ($(DEBUG), y)
@@ -16,6 +16,8 @@ server: $(OBJS) $(LIBS) common.h
 
 client: $(OBJS) $(LIBS) common.h
 	cc $(CFLAGS) $(OBJS) $(LIBS) client.c -o client
+
+power.o: power.h
 
 protocol.o: protocol.h
 
