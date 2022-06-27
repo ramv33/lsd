@@ -76,14 +76,15 @@ int sstate_pack_unpack_test(void)
 		.when = time(NULL),
 		.issued_at = time(NULL),
 		.powcmd = 0xdead,
-		.timer = 0x12345678
+		.timer = 0x12345678,
+		.ack = ACK_GRANTED
 	};
 
-	sprintf(before, "%ld %ld %x %x", s.when, s.issued_at, s.powcmd, s.timer);
+	sprintf(before, "%ld %ld %x %x %x", s.when, s.issued_at, s.powcmd, s.timer, s.ack);
 	pack_sstate(&s, sbuf, SSTATE_SIZE);
 	for (int i = 0; i < SSTATE_SIZE; ++i)
 		PDEBUG("%02hhx ", sbuf[i]);
 	unpack_sstate(&s, sbuf);
-	sprintf(after, "%ld %x %x", s.when, s.issued_at, s.powcmd, s.timer);
+	sprintf(after, "%ld %ld %x %x %x", s.when, s.issued_at, s.powcmd, s.timer, s.ack);
 	return !strcmp(before, after);
 }
