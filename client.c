@@ -24,6 +24,7 @@ struct {
 	int32_t		timer;		/* shutdown timer */
 	char		*ifname;	/* interface name */
 	char		*msg;		/* notification message to send to server */
+	char		*pvtkey;	/* private key */
 	int		timeout;	/* timeout while waiting for ack */
 	int		ntries;		/* no of times to resend when ack not received */
 	bool		ipv6;		/* true if IPv6 */
@@ -115,6 +116,8 @@ int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, siz
 	char ipstr[INET6_ADDRSTRLEN];
 
 	payload = pack_request(req, &payload_size);
+	/* sign message */
+
 	if (!payload) {
 		perror("allocating payload failed");
 		return -1;
