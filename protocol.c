@@ -66,6 +66,8 @@ static unsigned char *unpack_int16(unsigned char buf[2], uint16_t *num)
  * 	req_type;
  * 	msg_size;
  * 	*msg;		// variable part
+ * 	sig_size;
+ * 	*sig;		// variable part
  * };
  */
 size_t request_struct_fixedsize(void)
@@ -73,7 +75,7 @@ size_t request_struct_fixedsize(void)
 	struct request r;
 
 	return sizeof(r.when) + sizeof(r.req_type) + sizeof(r.timer)
-		+ sizeof(r.msg_size);
+		+ sizeof(r.msg_size) + sizeof(r.sig_size);
 }
 
 /*
@@ -96,7 +98,8 @@ size_t sstate_struct_size(void)
  * pack_request:
  * 	Pack request structure into a character array and return a pointer to it.
  * 	The character array is dynamically allocated and has to be freed by the caller.
- * 	$size  is set to the size of the array.
+ * 	$size  is set to the size of the array. The signature is NOT set here, it has
+ * 	to be manually set 
  *
  * 	struct request {
  * 		uint64_t	when;
@@ -104,6 +107,8 @@ size_t sstate_struct_size(void)
  * 		uint16_t	req_type;
  * 		int16_t		msg_size;
  * 		char		*msg;
+ * 		int16_t		sig_size;
+ * 		char		*sig;
  * 	}
  */
 unsigned char *pack_request(struct request *req, size_t *size)
@@ -125,6 +130,7 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	buf = pack_int16(buf, req->msg_size);
 	if (req->msg_size > 0)
 		strncpy(buf, req->msg, req->msg_size+1);
+	buf += req->msg_size+2;
 
 	return ret;
 }

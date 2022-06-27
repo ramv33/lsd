@@ -9,9 +9,11 @@
 struct request {
 	int64_t		when;		/* time client sent the request */
 	int32_t		timer;		/* timer for power commands */
-	uint16_t	req_type;
+	uint16_t	req_type;	/* request type */
 	int16_t		msg_size;
 	unsigned char	*msg;		/* optional nul-terminated string */
+	int16_t		sig_size;
+	unsigned char	*sig;		/* signature of request signed by client's private key */
 };
 
 struct sstate {
