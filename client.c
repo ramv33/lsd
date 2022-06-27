@@ -28,6 +28,7 @@ struct {
 	int		ntries;		/* no of times to resend when ack not received */
 	bool		ipv6;		/* true if IPv6 */
 	bool		broadcast;	/* true if broadcast */
+	bool		force;		/* force action, do not wait for user input */
 } argopts;
 
 static void parse_args(int *argc, char *argv[]);
@@ -88,6 +89,10 @@ int fill_request(struct request *req)
 	if (parse_request(&req->req_type, argopts.request) == -1) {
 		fprintf(stderr, "invalid request '%s'", argopts.request);
 		return -1;
+	}
+	if (argopts.force) {
+		SET_FORCE_BIT(req->req_type);
+		PDEBUG("set force bit: req_type = %x\n", req->req_type);
 	}
 	if (argopts.timer < 0) {
 		fprintf(stderr, "invalid timer value %d\n", argopts.timer);
@@ -169,7 +174,7 @@ static void parse_args(int *argc, char *argv[])
 		{NULL, 0, NULL, 0}
 	};
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:t:T:n:r:i:m:b6", long_options, NULL))
+		if ((c = getopt_long(*argc, argv, "p:t:T:n:r:i:m:bf6", long_options, NULL))
 				== -1)
 			break;
 		switch (c) {
@@ -218,6 +223,9 @@ static void parse_args(int *argc, char *argv[])
 			argopts.broadcast = true;
 			PDEBUG("broadcast");
 			break;
+		case 'f':
+			argopts.force = true;
+			PDEBUG("force\n");
 		case '6':
 			argopts.ipv6 = true;
 			PDEBUG("ipv6");
