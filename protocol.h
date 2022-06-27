@@ -27,20 +27,20 @@ struct sstate {
  */
 
 /* power commands */
-#define	REQ_POW_SHUTDOWN	0x00000001
-#define	REQ_POW_REBOOT		0x00000002
-#define	REQ_POW_STANDBY		0x00000003
-#define	REQ_POW_SLEEP		0x00000004
-#define	REQ_POW_HIBERNATE	0x00000005
-#define REQ_POW_ABORT		0x00000006
+#define	REQ_POW_SHUTDOWN	0x0001
+#define	REQ_POW_REBOOT		0x0002
+#define	REQ_POW_STANDBY		0x0003
+#define	REQ_POW_SLEEP		0x0004
+#define	REQ_POW_HIBERNATE	0x0005
+#define REQ_POW_ABORT		0x0006
 /* send notification to desktop */
-#define	REQ_NOTIFY		0x00000007
+#define	REQ_NOTIFY		0x0007
 /* query commands */
-#define	REQ_QUERY		0x00000008	/* get shutdown timer on server */
+#define	REQ_QUERY		0x0008	/* get shutdown timer on server */
 
-#define SET_FORCE_BIT(reqtype)		((reqtype) = ((1 << 31) | (reqtype)))
-#define RESET_FORCE_BIT(reqtype)	((reqtype) = (~(1 << 31) & (reqtype)))
-#define GET_FORCE_BIT(reqtype)		((reqtype) & (1 << 31))
+#define SET_FORCE_BIT(reqtype)		((reqtype) = ((1 << 15) | (reqtype)))
+#define RESET_FORCE_BIT(reqtype)	((reqtype) = (~(1 << 15) & (reqtype)))
+#define GET_FORCE_BIT(reqtype)		((reqtype) & (1 << 15))
 /*
  * server sstates
  */
