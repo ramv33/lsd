@@ -24,7 +24,8 @@ protocol.o: protocol.h
 addr.o: addr.h
 
 certs:
-	openssl req -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out cert.pem -keyout key.pem
+	openssl ecparam -genkey -name secp384r1 -noout -out pvtkey.pem
+	openssl ec -in pvtkey.pem -pubout -out pubkey.pem
 
 .PHONY : clean
 clean:
