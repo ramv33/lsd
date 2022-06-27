@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "protocol.h"
+#include "power.h"
 
 #define BUFFSIZE	2048
 #define RXBUF_SIZE	BUFFSIZE
@@ -20,10 +21,14 @@ static struct {
 	bool ipv6;
 } argopts;
 
+/* server state showing info about pending power commands */
+struct sstate state;
+
 static void parse_args(int *argc, char *argv[]);
 
 int create_socket(int domain, int port);
-int process_loop(int sockfd);
+int receive_requests(int sockfd);
+int handle_request(struct request *req);
 
 int main(int argc, char *argv[])
 {
@@ -38,14 +43,14 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 
 	printf("lsdd: listening on port %d\n", argopts.port);
-	process_loop(sockfd);
+	receive_requests(sockfd);
 	printf("server exiting...\n");
 out:
 	close(sockfd);
 	return 0;
 }
 
-int process_loop(int sockfd)
+int receive_requests(int sockfd)
 {
 	char rxbuf[RXBUF_SIZE], txbuf[TXBUF_SIZE];
 	char addrstr[INET_ADDRSTRLEN];
@@ -74,7 +79,61 @@ int process_loop(int sockfd)
 			req.msg = strdup(rxbuf+REQUEST_FIXED_SIZE);
 			PDEBUG("msg = '%s'\n", req.msg);
 		}
+		handle_request(&req);
 	}
+}
+
+/*
+ * handle_request:
+ * 	0 on success.
+ * 	-1 on invalid request or error scheduling command.
+ * 	-2 if request too old.
+ */
+int handle_request(struct request *req)
+{
+	if (req->when <= state.when) {
+		fprintf(stderr, "old request... ignoring\n");
+		return -2;
+	}
+	/* call power_schedule if it is a power command, else call notify or send state */
+	switch (req->req_type) {
+	case REQ_POW_SHUTDOWN:
+	case REQ_POW_REBOOT:
+	case REQ_POW_STANDBY:
+	case REQ_POW_SLEEP:
+	case REQ_POW_HIBERNATE:
+		power_schedule(req, &state);
+		break;
+	case REQ_POW_ABORT:
+		power_abort();
+		break;
+	case REQ_NOTIFY:
+		PDEBUG("notify\n");
+		/* send notification to user (req->msg) */
+		return 0;
+	case REQ_QUERY:
+		PDEBUG("query\n");
+		PDEBUG("sstate\n=====\n"
+			".when = %ld\n.issued_at = %ld\n"
+			".timer = %d\n.powcmd = %x\n\n",
+			state.when, state.issued_at, state.timer, state.powcmd);
+		/* send state to client */
+		break;
+	default:
+		fprintf(stderr, "invalid request type %x, ignoring...\n", req->req_type);
+		return -1;
+	}
+	state.when = req->when;
+	state.powcmd = req->req_type;	// do this only if power command, in switch. 
+	state.timer = req->timer;
+	PDEBUG("message: '%s'\n", (req->msg_size > 0 ? req->msg : ""));
+	/* schedule power command and return 0 on success
+	 * power_schedule(&req, &state).
+	 * schedules the command sets server state in state (issued_at). */
+
+	PDEBUG("state\n======\n"
+		".when = %ld\n.issued_at = %ld\n.powcmd = %x\n .timer = %d\n", 
+		state.when, state.issued_at, state.powcmd, state.timer);
 }
 
 int create_socket(int domain, int port)
