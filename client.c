@@ -221,14 +221,14 @@ static void parse_args(int *argc, char *argv[])
 			break;
 		case 'b':
 			argopts.broadcast = true;
-			PDEBUG("broadcast");
+			PDEBUG("broadcast\n");
 			break;
 		case 'f':
 			argopts.force = true;
 			PDEBUG("force\n");
 		case '6':
 			argopts.ipv6 = true;
-			PDEBUG("ipv6");
+			PDEBUG("ipv6\n");
 			break;
 		}
 	}
