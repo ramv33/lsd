@@ -91,6 +91,8 @@ int receive_requests(int sockfd)
  */
 int handle_request(struct request *req)
 {
+	int scheduled = 0;
+
 	if (req->when <= state.when) {
 		fprintf(stderr, "old request... ignoring\n");
 		return -2;
@@ -102,7 +104,7 @@ int handle_request(struct request *req)
 	case REQ_POW_STANDBY:
 	case REQ_POW_SLEEP:
 	case REQ_POW_HIBERNATE:
-		power_schedule(req, &state);
+		scheduled = power_schedule(req, &state);
 		break;
 	case REQ_POW_ABORT:
 		power_abort();
@@ -123,17 +125,19 @@ int handle_request(struct request *req)
 		fprintf(stderr, "invalid request type %x, ignoring...\n", req->req_type);
 		return -1;
 	}
-	state.when = req->when;
-	state.powcmd = req->req_type;	// do this only if power command, in switch. 
-	state.timer = req->timer;
-	PDEBUG("message: '%s'\n", (req->msg_size > 0 ? req->msg : ""));
-	/* schedule power command and return 0 on success
-	 * power_schedule(&req, &state).
-	 * schedules the command sets server state in state (issued_at). */
+	if (scheduled) {
+		state.when = req->when;
+		state.powcmd = req->req_type;	// do this only if power command, in switch. 
+		state.timer = req->timer;
+		PDEBUG("message: '%s'\n", (req->msg_size > 0 ? req->msg : ""));
+		/* schedule power command and return 0 on success
+		 * power_schedule(&req, &state).
+		 * schedules the command sets server state in state (issued_at). */
 
-	PDEBUG("state\n======\n"
-		".when = %ld\n.issued_at = %ld\n.powcmd = %x\n .timer = %d\n", 
-		state.when, state.issued_at, state.powcmd, state.timer);
+		PDEBUG("state\n======\n"
+			".when = %ld\n.issued_at = %ld\n.powcmd = %x\n .timer = %d\n", 
+			state.when, state.issued_at, state.powcmd, state.timer);
+	}
 }
 
 int create_socket(int domain, int port)

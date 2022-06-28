@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "protocol.h"
+#include "notif.h"
 #include "power.h"
 
 int g_powcmd;
@@ -34,6 +35,17 @@ void sigalrm_handler(int signum)
 int power_schedule(struct request *req, struct sstate *state)
 {
 	struct sigaction act;
+	int scheduled = 0;		/* return value: 0 if not scheduled */
+
+	if (GET_FORCE_BIT(req->req_type) == 0) {
+		PDEBUG("[-] no force bit\n");
+		if (!confirm_shutdown()) {
+			PDEBUG("[-] shutdown cancelled by user\n");
+			return scheduled;
+		}
+	} else {
+		PDEBUG("[-] force bit set\n");
+	}
 
 	act.sa_handler = sigalrm_handler;
 	sigemptyset(&act.sa_mask);
@@ -46,12 +58,14 @@ int power_schedule(struct request *req, struct sstate *state)
 		return -1;
 	}
 	PDEBUG("[+] signal handler registered\n");
+
 	alarm(req->timer);
 	PDEBUG("[+] alarm set for %d seconds\n", req->timer);
+	scheduled = 1;
 	state->issued_at = time(NULL);
 	g_powcmd = req->req_type;
 
-	return 0;
+	return scheduled;
 }
 
 void power_abort(void)
