@@ -9,9 +9,17 @@
 #include "notif.h"
 #include "power.h"
 
-int g_powcmd;
+uint16_t g_powcmd;
+
+static void doit(uint16_t req_type);
 
 void sigalrm_handler(int signum)
+{
+	PDEBUG("[-] alarm rang: calling doit()\n");
+	doit(g_powcmd);
+}
+
+static void doit(uint16_t req_type)
 {
 	switch (g_powcmd) {
 	case REQ_POW_SHUTDOWN:
@@ -30,6 +38,7 @@ void sigalrm_handler(int signum)
 		PDEBUG("[-] hibernate\n");
 		break;
 	}
+
 }
 
 int power_schedule(struct request *req, struct sstate *state)
@@ -59,11 +68,20 @@ int power_schedule(struct request *req, struct sstate *state)
 	}
 	PDEBUG("[+] signal handler registered\n");
 
-	alarm(req->timer);
-	PDEBUG("[+] alarm set for %d seconds\n", req->timer);
+	/* copy request type and reset force bit for switch case */
+	g_powcmd = req->req_type;
+	RESET_FORCE_BIT(g_powcmd);
+
+	/* no timer, do it immediately */
+	if (req->timer == 0) {
+		doit(g_powcmd);
+		/* may not reach here depending on request type */
+	} else {
+		alarm(req->timer);
+		PDEBUG("[+] alarm set for %d seconds\n", req->timer);
+	}
 	scheduled = 1;
 	state->issued_at = time(NULL);
-	g_powcmd = req->req_type;
 
 	return scheduled;
 }
