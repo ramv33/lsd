@@ -21,7 +21,7 @@ void sigalrm_handler(int signum)
 
 static void doit(uint16_t req_type)
 {
-	switch (g_powcmd) {
+	switch (req_type) {
 	case REQ_POW_SHUTDOWN:
 		PDEBUG("[-] shutting down\n");
 		break;
@@ -46,6 +46,10 @@ int power_schedule(struct request *req, struct sstate *state)
 	struct sigaction act;
 	int scheduled = 0;		/* return value: 0 if not scheduled */
 
+	/* copy request type and reset force bit for switch case */
+	g_powcmd = req->req_type;
+	RESET_FORCE_BIT(g_powcmd);
+
 	if (GET_FORCE_BIT(req->req_type) == 0) {
 		PDEBUG("[-] no force bit\n");
 		if (!confirm_shutdown()) {
@@ -68,9 +72,6 @@ int power_schedule(struct request *req, struct sstate *state)
 	}
 	PDEBUG("[+] signal handler registered\n");
 
-	/* copy request type and reset force bit for switch case */
-	g_powcmd = req->req_type;
-	RESET_FORCE_BIT(g_powcmd);
 
 	/* no timer, do it immediately */
 	if (req->timer == 0) {
