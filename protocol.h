@@ -93,7 +93,8 @@ size_t request_struct_fixedsize(void);
  * 	Store string corresponding to $reqtype in $str.
  * 	Return $str on success or NULL if $reqtype is invalid.
  */
-char *reqstr(uint16_t reqtype, char *str, size_t size)
+char *reqstr(uint16_t reqtype, char *str, size_t size);
+
 /*
  * sstate_struct_size:
  * 	Return size of sstate struct
