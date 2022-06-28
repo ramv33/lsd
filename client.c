@@ -47,14 +47,29 @@ int main(int argc, char *argv[])
 	struct request req;
 
 	parse_args(&argc, argv);
+
 	count = argc - argopts.targets_i;
 	PDEBUG("nips = %d\n", count);
+	if (argopts.broadcast) {
+		PDEBUG("[-] %d addresses specified; broadcast enabled.\n", count);
+		++count;
+	}
 	addrs = malloc(sizeof(*addrs) * count);
-	if (addr_create_array(AF_INET, (struct sockaddr *)addrs, &addrsize,
-			&argv[argopts.targets_i], count) == -1) {
-		fprintf(stderr, "address creation failed\n");
-		ret = 1;
-		goto out;
+	if (argopts.broadcast) {
+		ret = get_bcast(AF_INET, argopts.ifname, (struct sockaddr *)addrs, &addrsize);
+		if (ret == -1) {
+			if (!addrsize) {
+				printf("no bcast for iface: %s\n", argopts.ifname);
+				goto out;
+			}
+		}
+	} else {
+		if (addr_create_array(AF_INET, (struct sockaddr *)addrs, &addrsize,
+					&argv[argopts.targets_i], count) == -1) {
+			fprintf(stderr, "address creation failed\n");
+			ret = 1;
+			goto out;
+		}
 	}
 
 	for (int i = 0; i < count; ++i) {
@@ -240,9 +255,12 @@ static void parse_args(int *argc, char *argv[])
 	if (optind < *argc) {
 		argopts.targets_i = optind;	// optind is index of first non-option argument
 	} else {
-		fprintf(stderr, "usage error: destination address required\n");
-		usage();
-		/* usage exits from program */
+		argopts.targets_i = optind;
+		if (!argopts.broadcast) {
+			fprintf(stderr, "usage error: destination address required\n");
+			usage();
+			/* usage exits from program */
+		}
 	}
 	if (!argopts.request) {
 		fprintf(stderr, "usage error: -r argument is mandatory\n");
