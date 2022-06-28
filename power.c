@@ -58,6 +58,7 @@ int power_schedule(struct request *req, struct sstate *state)
 		}
 	} else {
 		PDEBUG("[-] force bit set\n");
+		send_notification(req);
 	}
 
 	act.sa_handler = sigalrm_handler;
