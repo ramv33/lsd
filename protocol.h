@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+/* signature structure */
+struct signature {
+	int16_t		sigsize;
+	unsigned char	*sig;
+}
+
 /*
  * This structure is used to send the request to the server by the client.
  */
@@ -12,8 +18,7 @@ struct request {
 	uint16_t	req_type;	/* request type */
 	int16_t		msg_size;
 	unsigned char	*msg;		/* optional nul-terminated string */
-	int16_t		sig_size;
-	unsigned char	*sig;		/* signature of request signed by client's private key */
+	struct signature sig;
 };
 
 struct sstate {
