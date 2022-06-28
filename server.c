@@ -92,13 +92,20 @@ int receive_requests(int sockfd)
 int handle_request(struct request *req)
 {
 	int scheduled = 0;
+	uint16_t req_type;
 
 	if (req->when <= state.when) {
 		fprintf(stderr, "old request... ignoring\n");
 		return -2;
 	}
+
+	/* unset force bit for switch case */
+	req_type = req->req_type;
+	if (GET_FORCE_BIT(req_type))
+		PDEBUG("[-] force bit set\n");
+	RESET_FORCE_BIT(req_type);
 	/* call power_schedule if it is a power command, else call notify or send state */
-	switch (req->req_type) {
+	switch (req_type) {
 	case REQ_POW_SHUTDOWN:
 	case REQ_POW_REBOOT:
 	case REQ_POW_STANDBY:
