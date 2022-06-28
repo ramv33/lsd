@@ -78,6 +78,7 @@ int get_bcast(int family, char *ifname, struct sockaddr *addr, size_t *addrsize)
 		perror("getifaddrs");
 		return -1;
 	}
+	*addrsize = 0;	/* if not found in ifaddrs */
 	for (struct ifaddrs *ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
 		if (ifa->ifa_addr == NULL)
 			continue;
