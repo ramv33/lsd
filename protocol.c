@@ -194,3 +194,27 @@ int parse_request(uint16_t *reqtype, char *reqstr)
 	else
 		return -1;
 }
+
+char *reqstr(uint16_t reqtype, char *str, size_t size)
+{
+	switch (reqtype) {
+	case REQ_POW_SHUTDOWN:
+		strncpy(str, "shutdown", size);
+		break;
+	case REQ_POW_REBOOT:
+		strncpy(str, "reboot", size);
+		break;
+	case REQ_POW_SLEEP:
+		strncpy(str, "sleep", size);
+		break;
+	case REQ_POW_STANDBY:
+		strncpy(str, "standby", size);
+		break;
+	case REQ_POW_HIBERNATE:
+		strncpy(str, "hibernate", size);
+		break;
+	default:
+		return NULL;
+	}
+	return str;
+}
