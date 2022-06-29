@@ -11,6 +11,7 @@
 #include "common.h"
 #include "protocol.h"
 #include "power.h"
+#include "daemon.h"
 
 #define BUFFSIZE	2048
 #define RXBUF_SIZE	BUFFSIZE
@@ -35,6 +36,8 @@ int main(int argc, char *argv[])
 	int sockfd = -1, rxlen, txlen;
 	bool is_server = true;
 	ssize_t ret;
+
+	daemonize();
 
 	parse_args(&argc, argv);
 

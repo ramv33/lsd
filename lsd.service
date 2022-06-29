@@ -1,0 +1,12 @@
+[Unit]
+Description=Lan Shutdown Daemon to remotely shut down systems
+Requires=network.target
+DefaultDependencies=no
+
+[Service]
+Type=simple
+ExecStart=/home/rmn/Documents/mini/lsd/d/server
+User=root
+
+[Install]
+WantedBy=multi-user.target
