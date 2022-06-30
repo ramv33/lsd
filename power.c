@@ -24,9 +24,11 @@ static void doit(uint16_t req_type)
 	switch (req_type) {
 	case REQ_POW_SHUTDOWN:
 		PDEBUG("[-] shutting down\n");
+		system("shutdown -h now");
 		break;
 	case REQ_POW_REBOOT:
 		PDEBUG("[-] rebooting\n");
+		system("shutdown -r now");
 		break;
 	case REQ_POW_STANDBY:
 		PDEBUG("[-] standby\n");
