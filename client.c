@@ -32,7 +32,7 @@ struct {
 } argopts;
 
 static void parse_args(int *argc, char *argv[]);
-static void usage(void);
+static void usage(char *pgmname);
 
 int create_socket(int domain, bool bcast);
 int fill_request(struct request *req);
@@ -178,12 +178,12 @@ static void parse_args(int *argc, char *argv[])
 	argopts.port = DEFAULT_PORT;
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},
-		{"timeout", required_argument, NULL, 't'},
-		{"timer", required_argument, NULL, 'T'},
+		{"timer", required_argument, NULL, 't'},
 		{"tries", required_argument, NULL, 'n'},
 		{"request", required_argument, NULL, 'r'},
 		{"interface", required_argument, NULL, 'i'},
 		{"message", required_argument, NULL, 'm'},
+		{"timeout", required_argument, NULL, 'T'},
 		{"broadcast", no_argument, NULL, 'b'},
 		{"ipv6", no_argument, NULL, '6'},
 		{NULL, 0, NULL, 0}
@@ -258,18 +258,33 @@ static void parse_args(int *argc, char *argv[])
 		argopts.targets_i = optind;
 		if (!argopts.broadcast) {
 			fprintf(stderr, "usage error: destination address required\n");
-			usage();
+			usage(argv[0]);
 			/* usage exits from program */
 		}
 	}
 	if (!argopts.request) {
 		fprintf(stderr, "usage error: -r argument is mandatory\n");
-		usage();
+		usage(argv[0]);
 	}
 }
 
-void usage(void)
+void usage(char *pgmname)
 {
-	puts("TODO: usage");
+	printf(
+	"\nUsage: %s [options] ip(s)\n\n"
+	"-p, --port=PORT           specify port number of daemon on server\n"
+	"\n"
+	"-t, --timer=SECONDS       when to schedule command\n"
+	"\n"
+	"-r, --request=REQ         specify the request to send to server; valid options are\n"
+	"                          shutdown, reboot, standby, hibernate, sleep, abort, notify, query\n"
+	"\n"
+	"-b, --broadcast           broadcast request on network out of given interface\n"
+	"                          NOTE: interface must be specified (-i) when using this flag\n"
+	"\n"
+	"-i, --interface=IFNAME    specify network interface to use for sending broadcast message\n"
+	"\n"
+	"-m, --message=MSG         message to send for notification on server\n\n"
+	, pgmname);
 	exit(EXIT_FAILURE);
 }
