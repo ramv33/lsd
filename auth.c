@@ -38,8 +38,8 @@ void signbuf(const char *keyfile, unsigned char *buf, size_t bufsize,
 	EVP_PKEY_free(key);
 }
 
-int verifysig(const char *pubkey, char *buf, size_t bufsize,
-		unsigned char **sig, size_t *siglen)
+int verifysig(const char *pubkey, unsigned char *buf, size_t bufsize,
+		unsigned char *sig, size_t *siglen)
 {
 	FILE *fp;
 	EC_KEY *ec_key;
