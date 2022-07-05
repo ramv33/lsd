@@ -111,17 +111,21 @@ int fill_request(struct request *req)
 int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t count)
 {
 	unsigned char *payload;
-	size_t payload_size;
+	size_t payload_size, sigsize;
 	ssize_t ret;
 	char ipstr[INET6_ADDRSTRLEN];
 
 	payload = pack_request(req, &payload_size);
-	/* sign message */
-
 	if (!payload) {
 		perror("allocating payload failed");
 		return -1;
 	}
+	/* sign message */
+	if (!sign_request(payload, &payload_size, &sigsize, argopts.pvtkey)) {
+		fprintf(stderr, "error signing request\n");
+		return -1;
+	}
+
 	for (int i = 0; i < count; ++i) {
 		ret = sendto(sockfd, payload, payload_size, 0,
 				(struct sockaddr *)&addrs[i], sizeof(*addrs));
