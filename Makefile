@@ -11,10 +11,10 @@ endif
 
 all: server client
 
-server: $(OBJS) $(LIBS) common.h
+server: $(OBJS) $(LIBS) common.h server.c
 	cc $(CFLAGS) $(OBJS) $(LIBS) server.c -o server
 
-client: $(OBJS) $(LIBS) common.h
+client: $(OBJS) $(LIBS) common.h client.c
 	cc $(CFLAGS) $(OBJS) $(LIBS) client.c -o client
 
 power.o: power.h
