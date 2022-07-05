@@ -73,7 +73,7 @@ unsigned char *pack_request(struct request *req, size_t *size);
  * 	Sign request packed into $buf using $keyfile as private key, and store the
  * 	signature in $size. Update $sigsize to the size of the signature.
  */
-unsigned char *sign_request(unsigned char *buf, size_t bufsize, size_t *sigsize,
+unsigned char *sign_request(unsigned char *buf, size_t *bufsize, size_t *sigsize,
 		const char *keyfile);
 
 /*

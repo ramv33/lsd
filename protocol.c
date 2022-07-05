@@ -139,16 +139,19 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	return ret;
 }
 
-unsigned char *sign_request(unsigned char *buf, size_t bufsize, size_t *sigsize,
+unsigned char *sign_request(unsigned char *buf, size_t *bufsize, size_t *sigsize,
 		const char *keyfile)
 {
 	unsigned char sig[192];	// temporarily hold signature in buffer
 	int16_t size;
 
-	signbuf(keyfile, buf, bufsize, (unsigned char **)&sig, sigsize);
+	signbuf(keyfile, buf, *bufsize, (unsigned char **)&sig, sigsize);
 	size = *sigsize;
-	buf = pack_int16(buf+bufsize, size);
+	unsigned char *p = buf;
+	buf = pack_int16(buf+*bufsize, size);
+	*bufsize += buf - (p+*bufsize);	// increment size after packing int16, could just add 2
 	memcpy(buf, sig, *sigsize);
+	*bufsize += *sigsize;
 
 	return buf;
 }

@@ -48,12 +48,14 @@ int request_pack_unpack_test(void)
 
 	/* signature stuff */
 	unsigned char sig[192];
-	size_t sigsize = 0;
+	size_t sigsize = 0, sigstart;
 
 	sprintf(before, "%lld %x %x %d",
 		req.when, req.req_type, req.timer, req.msg_size);
 	char *reqbuf = pack_request(&req, &size);
-	sign_request(reqbuf, size, &sigsize, "pvtkey.pem");
+	sigstart = size;
+	sign_request(reqbuf, &size, &sigsize, "pvtkey.pem");
+	printf("reqbuf size after signing: %zu\n", size);
 
 
 	PDEBUG("REQUEST\n=======\n");
@@ -66,7 +68,7 @@ int request_pack_unpack_test(void)
 	printf("SIGNATURE INFO\n===========\n"
 		"sigsize = %zd\nsignature:\n", sigsize);
 	for (int i = 0; i < sigsize; ++i)
-		printf("%02hhx", reqbuf[size+i]);
+		printf("%02hhx", reqbuf[sigstart+i]);
 	puts("");
 
 	for (int i = 0; i < size; ++i)
