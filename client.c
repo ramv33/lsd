@@ -164,8 +164,10 @@ static void parse_args(int *argc, char *argv[])
 	int c;
 
 	argopts.port = DEFAULT_PORT;
+	argopts.pvtkey = "pvtkey.pem";
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},
+		{"key", required_argument, NULL, 'k'},
 		{"timeout", required_argument, NULL, 't'},
 		{"timer", required_argument, NULL, 'T'},
 		{"tries", required_argument, NULL, 'n'},
@@ -177,7 +179,7 @@ static void parse_args(int *argc, char *argv[])
 		{NULL, 0, NULL, 0}
 	};
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:t:T:n:r:i:m:bf6", long_options, NULL))
+		if ((c = getopt_long(*argc, argv, "p:k:t:T:n:r:i:m:bf6", long_options, NULL))
 				== -1)
 			break;
 		switch (c) {
@@ -188,6 +190,10 @@ static void parse_args(int *argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 			PDEBUG("port=%d\n", argopts.port);
+			break;
+		case 'k':
+			argopts.pvtkey = optarg;
+			PDEBUG("pvtkey='%s'\n", argopts.pvtkey);
 			break;
 		case 't':
 			argopts.timer = strtol(optarg, NULL, 10);
