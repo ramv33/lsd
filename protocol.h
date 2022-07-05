@@ -3,15 +3,22 @@
 
 #include <stdint.h>
 
+/* signature structure */
+struct signature {
+	int16_t		sigsize;
+	unsigned char	sig[192];
+};
+
 /*
  * This structure is used to send the request to the server by the client.
  */
 struct request {
 	int64_t		when;		/* time client sent the request */
 	int32_t		timer;		/* timer for power commands */
-	uint16_t	req_type;
+	uint16_t	req_type;	/* request type */
 	int16_t		msg_size;
 	unsigned char	*msg;		/* optional nul-terminated string */
+	struct signature sig;
 };
 
 struct sstate {
@@ -48,6 +55,8 @@ struct sstate {
 #define	ACK_DENIED		0x0001
 #define ACK_DISABLED		0x0002		/* request is disabled in server config */
 
+#define MSG_MAXSIZE		128
+
 /* parse_request:	Store request code in *$reqtype */
 int parse_request(uint16_t *reqtype, char *reqstr);
 
@@ -60,12 +69,26 @@ int parse_request(uint16_t *reqtype, char *reqstr);
 unsigned char *pack_request(struct request *req, size_t *size);
 
 /*
+ * sign_request:
+ * 	Sign request packed into $buf using $keyfile as private key, and store the
+ * 	signature in $size. Update $sigsize to the size of the signature.
+ */
+unsigned char *sign_request(unsigned char *buf, size_t *bufsize, size_t *sigsize,
+		const char *keyfile);
+
+/*
+ * unpack_signature:
+ * 	Unpack signature part from $buf into $sig.
+ */
+void unpack_signature(struct signature *sig, unsigned char *buf);
+
+/*
  * unpack_request_fixed:
  * 	Unpack fixed part of request structure from character array into the given struct.
  *	NOTE: reqbuf does not include the message buffer. It has to be read from the
  *	connection based on the msg_size field.
  */
-void unpack_request_fixed(struct request *req, unsigned char *reqbuf);
+unsigned char *unpack_request_fixed(struct request *req, unsigned char *reqbuf);
 
 /*
  * pack_sstate:

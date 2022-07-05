@@ -24,6 +24,7 @@ struct {
 	int32_t		timer;		/* shutdown timer */
 	char		*ifname;	/* interface name */
 	char		*msg;		/* notification message to send to server */
+	char		*pvtkey;	/* private key */
 	int		timeout;	/* timeout while waiting for ack */
 	int		ntries;		/* no of times to resend when ack not received */
 	bool		ipv6;		/* true if IPv6 */
@@ -125,7 +126,7 @@ int fill_request(struct request *req)
 int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t count)
 {
 	unsigned char *payload;
-	size_t payload_size;
+	size_t payload_size, sigsize;
 	ssize_t ret;
 	char ipstr[INET6_ADDRSTRLEN];
 
@@ -134,6 +135,12 @@ int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, siz
 		perror("allocating payload failed");
 		return -1;
 	}
+	/* sign message */
+	if (!sign_request(payload, &payload_size, &sigsize, argopts.pvtkey)) {
+		fprintf(stderr, "error signing request\n");
+		return -1;
+	}
+
 	for (int i = 0; i < count; ++i) {
 		ret = sendto(sockfd, payload, payload_size, 0,
 				(struct sockaddr *)&addrs[i], sizeof(*addrs));
@@ -176,9 +183,12 @@ static void parse_args(int *argc, char *argv[])
 	int c;
 
 	argopts.port = DEFAULT_PORT;
+	argopts.pvtkey = "pvtkey.pem";
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},
+		{"key", required_argument, NULL, 'k'},
 		{"timer", required_argument, NULL, 't'},
+		{"timeout", required_argument, NULL, 'T'},
 		{"tries", required_argument, NULL, 'n'},
 		{"request", required_argument, NULL, 'r'},
 		{"interface", required_argument, NULL, 'i'},
@@ -189,7 +199,7 @@ static void parse_args(int *argc, char *argv[])
 		{NULL, 0, NULL, 0}
 	};
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:t:T:n:r:i:m:bf6", long_options, NULL))
+		if ((c = getopt_long(*argc, argv, "p:k:t:T:n:r:i:m:bf6", long_options, NULL))
 				== -1)
 			break;
 		switch (c) {
@@ -200,6 +210,10 @@ static void parse_args(int *argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 			PDEBUG("port=%d\n", argopts.port);
+			break;
+		case 'k':
+			argopts.pvtkey = optarg;
+			PDEBUG("pvtkey='%s'\n", argopts.pvtkey);
 			break;
 		case 't':
 			argopts.timer = strtol(optarg, NULL, 10);
@@ -241,6 +255,7 @@ static void parse_args(int *argc, char *argv[])
 		case 'f':
 			argopts.force = true;
 			PDEBUG("force\n");
+			break;
 		case '6':
 			argopts.ipv6 = true;
 			PDEBUG("ipv6\n");
