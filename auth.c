@@ -7,21 +7,22 @@
 
 #include "auth.h"
 
-void signbuf(const char *keyfile, unsigned char *buf, size_t bufsize,
+int signbuf(const char *keyfile, unsigned char *buf, size_t bufsize,
 		unsigned char **sig, size_t *siglen)
 {
 	FILE *keyfp;
 	EC_KEY *ec_key;
 	EVP_PKEY *key;
 
+	*siglen = 0;
 	if ((keyfp = fopen(keyfile, "r")) == NULL) {
 		perror("fopen");
-		return;
+		return -1;
 	}
 	ec_key = PEM_read_ECPrivateKey(keyfp, NULL, NULL, NULL);
 	if (!ec_key) {
 		ERR_print_errors_fp(stderr);
-		return;
+		return -1;
 	}
 	fclose(keyfp);
 
@@ -36,6 +37,8 @@ void signbuf(const char *keyfile, unsigned char *buf, size_t bufsize,
 
 	EVP_PKEY_CTX_free(key_ctx);
 	EVP_PKEY_free(key);
+
+	return 0;
 }
 
 int verifysig(const char *pubkey, unsigned char *buf, size_t bufsize,
