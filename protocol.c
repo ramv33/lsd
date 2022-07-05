@@ -145,7 +145,8 @@ unsigned char *sign_request(unsigned char *buf, size_t *bufsize, size_t *sigsize
 	unsigned char sig[192];	// temporarily hold signature in buffer
 	int16_t size;
 
-	signbuf(keyfile, buf, *bufsize, (unsigned char **)&sig, sigsize);
+	if (signbuf(keyfile, buf, *bufsize, (unsigned char **)&sig, sigsize) == -1)
+		return NULL;
 	size = *sigsize;
 	unsigned char *p = buf;
 	buf = pack_int16(buf+*bufsize, size);
