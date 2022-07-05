@@ -235,6 +235,7 @@ static void parse_args(int *argc, char *argv[])
 		case 'f':
 			argopts.force = true;
 			PDEBUG("force\n");
+			break;
 		case '6':
 			argopts.ipv6 = true;
 			PDEBUG("ipv6");
