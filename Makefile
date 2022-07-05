@@ -1,6 +1,6 @@
 DEBUG = y
 
-OBJS = protocol.o addr.o power.o
+OBJS = protocol.o addr.o power.o auth.o
 LIBS = -lssl -lcrypto
 
 ifeq ($(DEBUG), y)
