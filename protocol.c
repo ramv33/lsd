@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
-#include "protocol.h"
+
 #include "common.h"
+#include "protocol.h"
+#include "auth.h"
 
 static unsigned char *pack_int64(unsigned char buf[8], uint64_t num)
 {
@@ -114,12 +116,13 @@ unsigned char *pack_request(struct request *req, size_t *size)
 {
 	/* size needed for buffer is the fixed size + size of message */
 	unsigned char *buf, *ret;
-	size_t msg_size;
+	unsigned char sig[192];
+	size_t msg_size, sigsize;
 
 	/* limit on message size */
-	msg_size = MIN(req->msg_size + 1, MSG_MAXSIZE);
+	msg_size = MIN(req->msg_size, MSG_MAXSIZE);
 	*size = request_struct_fixedsize() + msg_size;
-	buf = malloc(*size);
+	buf = malloc(*size + sizeof(struct signature));
 	if (buf == NULL) {
 		*size = 0;
 		return NULL;
@@ -136,21 +139,47 @@ unsigned char *pack_request(struct request *req, size_t *size)
 	return ret;
 }
 
+unsigned char *sign_request(unsigned char *buf, size_t bufsize, size_t *sigsize,
+		const char *keyfile)
+{
+	unsigned char sig[192];	// temporarily hold signature in buffer
+	int16_t size;
+
+	signbuf(keyfile, buf, bufsize, (unsigned char **)&sig, sigsize);
+	size = *sigsize;
+	buf = pack_int16(buf+bufsize, size);
+	memcpy(buf, sig, *sigsize);
+
+	return buf;
+}
+
+void unpack_signature(struct signature *sig, unsigned char *buf)
+{
+	int16_t sigsize = 0;
+
+	buf = unpack_int16(buf, &sigsize);
+	sig->sigsize = sigsize;
+	memcpy(sig->sig, buf, sigsize);
+}
+
 /*
  * unpack_request_fixed:
  * 	Unpack request from character buffer into request structure.
+ * 	Returns a pointer past the end of the fixed part, i.e a pointer to
+ * 	where the message part should be.
  *
  * 	NOTE: It only unpacks the fixed part, since we do not know how much
  * 	to read from the connection for the message string. That has to be
  * 	determined from the req->msg_size after unpacking.
  */
-void unpack_request_fixed(struct request *req, unsigned char *reqbuf)
+unsigned char *unpack_request_fixed(struct request *req, unsigned char *reqbuf)
 {
 	/* unpack_* returns the next address in the buffer after unpacking */
 	reqbuf = unpack_int64(reqbuf, &req->when);
 	reqbuf = unpack_int32(reqbuf, &req->timer);
 	reqbuf = unpack_int16(reqbuf, &req->req_type);
 	reqbuf = unpack_int16(reqbuf, &req->msg_size);
+	return reqbuf;
 }
 
 /*
