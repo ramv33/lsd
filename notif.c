@@ -49,7 +49,7 @@ void send_notification(struct request *req)
 	uint16_t req_type;
 	FILE *fp;
 	char msg[16], *m = msg;
-	char cmd[256];
+	char cmd[512];
 
 	req_type = req->req_type;
 	RESET_FORCE_BIT(req_type);
