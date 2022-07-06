@@ -80,6 +80,8 @@ int receive_requests(int sockfd)
 		if (req.msg_size > 0) {
 			req.msg = strdup(rp);
 			PDEBUG("msg = '%s'\n", req.msg);
+		} else {
+			req.msg = NULL;
 		}
 		rp += req.msg_size;
 		unpack_signature(&req.sig, rp);
