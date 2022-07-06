@@ -21,9 +21,14 @@ notif.o: notif.h
 
 power.o: power.h
 
+test: pro-test
+
+pro-test: pro-test.c protocol.o auth.o $(LIBS)
+
 protocol.o: protocol.h
 
 addr.o: addr.h
+
 
 certs:
 	openssl ecparam -genkey -name secp384r1 -noout -out pvtkey.pem
@@ -31,4 +36,4 @@ certs:
 
 .PHONY : clean
 clean:
-	rm -f server client $(OBJS)
+	rm -f server client $(OBJS) pro-test
