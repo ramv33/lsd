@@ -1,6 +1,6 @@
 DEBUG = y
 
-OBJS = protocol.o addr.o power.o notif.o
+OBJS = protocol.o addr.o power.o notif.o auth.o
 LIBS = -lssl -lcrypto
 
 ifeq ($(DEBUG), y)
@@ -11,19 +11,24 @@ endif
 
 all: server client
 
-server: $(OBJS) $(LIBS) common.h
+server: $(OBJS) $(LIBS) common.h server.c
 	cc $(CFLAGS) $(OBJS) $(LIBS) server.c -o server
 
-client: $(OBJS) $(LIBS) common.h
+client: $(OBJS) $(LIBS) common.h client.c
 	cc $(CFLAGS) $(OBJS) $(LIBS) client.c -o client
 
 notif.o: notif.h
 
 power.o: power.h
 
+test: pro-test
+
+pro-test: pro-test.c protocol.o auth.o $(LIBS)
+
 protocol.o: protocol.h
 
 addr.o: addr.h
+
 
 certs:
 	openssl ecparam -genkey -name secp384r1 -noout -out pvtkey.pem
@@ -31,4 +36,4 @@ certs:
 
 .PHONY : clean
 clean:
-	rm -f server client $(OBJS)
+	rm -f server client $(OBJS) pro-test

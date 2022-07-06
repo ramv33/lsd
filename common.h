@@ -8,6 +8,8 @@
 #	define PDEBUG(fmt, args...)	/* not debugging: do nothin */
 #endif /* endif DEBUG */
 
+#define MIN(a, b)	((a) < (b) ? (a) : (b))
+
 #define DEFAULT_PORT	6969
 
 #endif /* ifndef COMMON_H */
