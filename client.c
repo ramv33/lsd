@@ -15,7 +15,8 @@
 #include "protocol.h"
 #include "addr.h"
 
-#define	DEFAULT_PORT	6969	// TODO: move this into a common header file
+#define DEFAULT_PORT	6969	// TODO: move this into a common header file
+#define DEFAULT_TIMER	5
 
 struct {
 	int		port;		/* port number */
@@ -181,6 +182,7 @@ static void parse_args(int *argc, char *argv[])
 {
 	int c;
 
+	argopts.timer = DEFAULT_TIMER;
 	argopts.port = DEFAULT_PORT;
 	argopts.pvtkey = "pvtkey.pem";
 	static struct option long_options[] = {
