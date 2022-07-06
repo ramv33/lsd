@@ -35,7 +35,11 @@ int confirm_shutdown(struct request *req, unsigned int timeout)
 		/* ret = 0, 1, or 5 depending on whether user pressed OK, Cancel, or
 		 * timeout has been reached */
 		PDEBUG("confirmation status code: %d\n", ret);
-		/* zenity returns 0 on 'yes' and 1 on 'no'. negate it */
+		/* return true if user pressed OK or prompt timed out */
+		if (ret == 5) {
+			printf("[-] confirm prompt timed out\n");
+			return 1;
+		}
 		return !ret;
 	}
 }
