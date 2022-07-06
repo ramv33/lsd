@@ -27,8 +27,8 @@ struct {
 	char		*pvtkey;	/* private key */
 	int		timeout;	/* timeout while waiting for ack */
 	int		ntries;		/* no of times to resend when ack not received */
+	int		broadcast;	/* 1 if broadcast, else 0 */
 	bool		ipv6;		/* true if IPv6 */
-	bool		broadcast;	/* true if broadcast */
 	bool		force;		/* force action, do not wait for user input */
 } argopts;
 
@@ -37,43 +37,42 @@ static void usage(char *pgmname);
 
 int create_socket(int domain, bool bcast);
 int fill_request(struct request *req);
-int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t count);
+int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t num_ips);
 
 int main(int argc, char *argv[])
 {
 	struct sockaddr_in *addrs;
 	size_t addrsize = sizeof(*addrs);
-	int sockfd, ret = 0, count;
+	int sockfd, ret = 0, num_ips;
 	char ipstr[INET6_ADDRSTRLEN];
 	struct request req;
 
 	parse_args(&argc, argv);
 
-	count = argc - argopts.targets_i;
-	PDEBUG("nips = %d\n", count);
-	if (argopts.broadcast) {
-		PDEBUG("[-] %d addresses specified; broadcast enabled.\n", count);
-		++count;
-	}
-	addrs = malloc(sizeof(*addrs) * count);
+	num_ips = argc - argopts.targets_i;
+	PDEBUG("nips = %d\n", num_ips);
+
+	if (argopts.broadcast)
+		PDEBUG("[-] %d addresses specified; broadcast enabled.\n", num_ips);
+	addrs = malloc(sizeof(*addrs) * (num_ips + argopts.broadcast));
+
 	if (argopts.broadcast) {
 		ret = get_bcast(AF_INET, argopts.ifname, (struct sockaddr *)addrs, &addrsize);
 		if (ret == -1) {
-			if (!addrsize) {
+			if (!addrsize)
 				printf("no bcast for iface: %s\n", argopts.ifname);
-				goto out;
-			}
-		}
-	} else {
-		if (addr_create_array(AF_INET, (struct sockaddr *)addrs, &addrsize,
-					&argv[argopts.targets_i], count) == -1) {
-			fprintf(stderr, "address creation failed\n");
-			ret = 1;
 			goto out;
 		}
 	}
+	/* If bcast was also specified, the bcast address is in addrs[0], and we start from addrs[1] */
+	if (addr_create_array(AF_INET, (struct sockaddr *)addrs + argopts.broadcast, &addrsize,
+				&argv[argopts.targets_i], num_ips) == -1) {
+		fprintf(stderr, "address creation failed\n");
+		ret = 1;
+		goto out;
+	}
 
-	for (int i = 0; i < count; ++i) {
+	for (int i = 0; i < num_ips + argopts.broadcast; ++i) {
 		addrs[i].sin_port = htons(argopts.port);
 #ifdef DEBUG
 		if (inet_ntop(AF_INET, &addrs[i].sin_addr, ipstr, sizeof(ipstr)))
@@ -93,7 +92,7 @@ int main(int argc, char *argv[])
 		req.when, req.req_type, req.timer, req.msg_size,
 		(req.msg_size != 0) ? req.msg : "");
 	sockfd = create_socket(AF_INET, argopts.broadcast);
-	send_request(sockfd, &req, addrs, count);
+	send_request(sockfd, &req, addrs, num_ips + argopts.broadcast);
 out:
 	free(addrs);
 	return ret;
@@ -123,7 +122,7 @@ int fill_request(struct request *req)
 	req->when = time(NULL);
 }
 
-int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t count)
+int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t num_ips)
 {
 	unsigned char *payload;
 	size_t payload_size, sigsize;
@@ -141,7 +140,7 @@ int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, siz
 		return -1;
 	}
 
-	for (int i = 0; i < count; ++i) {
+	for (int i = 0; i < num_ips; ++i) {
 		ret = sendto(sockfd, payload, payload_size, 0,
 				(struct sockaddr *)&addrs[i], sizeof(*addrs));
 #		ifdef DEBUG
@@ -249,7 +248,7 @@ static void parse_args(int *argc, char *argv[])
 			PDEBUG("message='%s'\n", argopts.msg);
 			break;
 		case 'b':
-			argopts.broadcast = true;
+			argopts.broadcast = 1;
 			PDEBUG("broadcast\n");
 			break;
 		case 'f':
