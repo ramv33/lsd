@@ -12,6 +12,7 @@
 #include "protocol.h"
 #include "power.h"
 #include "auth.h"
+#include "notif.h"
 
 #define BUFFSIZE	2048
 #define RXBUF_SIZE	BUFFSIZE
@@ -80,6 +81,8 @@ int receive_requests(int sockfd)
 		if (req.msg_size > 0) {
 			req.msg = strdup(rp);
 			PDEBUG("msg = '%s'\n", req.msg);
+		} else {
+			req.msg = NULL;
 		}
 		rp += req.msg_size;
 		unpack_signature(&req.sig, rp);
@@ -131,6 +134,7 @@ int handle_request(struct request *req)
 		break;
 	case REQ_NOTIFY:
 		PDEBUG("notify\n");
+		send_notification(req);
 		/* send notification to user (req->msg) */
 		return 0;
 	case REQ_QUERY:

@@ -17,7 +17,7 @@ int confirm_shutdown(struct request *req, unsigned int timeout)
 	RESET_FORCE_BIT(req_type);
 	if (reqstr(req_type, msg, sizeof(msg)) == NULL) {
 		PDEBUG("[*] invalid request type: %x\n", req_type);
-		return;
+		return 0;
 	}
 	snprintf(cmd, sizeof(cmd),
 			"zenity --question \
@@ -48,23 +48,29 @@ void send_notification(struct request *req)
 {
 	uint16_t req_type;
 	FILE *fp;
-	char msg[16];
-	char cmd[256];
+	char msg[16], *m = msg;
+	char cmd[512];
 
 	req_type = req->req_type;
 	RESET_FORCE_BIT(req_type);
 
-	if (reqstr(req_type, msg, sizeof(msg)) == NULL) {
-		PDEBUG("[*] invalid request type: %x\n", req_type);
-		return;
+	if (req_type == REQ_NOTIFY) {
+		m = req->msg;
+		snprintf(cmd, sizeof(cmd), "zenity --info --text='%s'",
+				m, req->timer);
+	} else {
+		if (reqstr(req_type, msg, sizeof(msg)) == NULL) {
+			PDEBUG("[*] invalid request type: %x\n", req_type);
+			return;
+		}
+		snprintf(cmd, sizeof(cmd), "zenity --info --text='%s in %d seconds'",
+				m, req->timer);
 	}
 
-	snprintf(cmd, sizeof(cmd), "zenity --info --text='%s in %d seconds'",
-			msg, req->timer);
 	fp = popen(cmd, "r");
 	if (fp == NULL)
 		perror("popen: zenity");
 	else
-		PDEBUG("[-] sent notification: '%s in %d seconds'\n",
-			msg, req->timer);
+		PDEBUG("[-] sent notification: '%s'\n",
+			m, req->timer);
 }

@@ -36,4 +36,4 @@ certs:
 
 .PHONY : clean
 clean:
-	rm -f server client $(OBJS) pro-test
+	rm -f server client pro-test *.o
