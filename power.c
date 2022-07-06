@@ -9,6 +9,8 @@
 #include "notif.h"
 #include "power.h"
 
+#define CONFIRM_TIMEOUT	10
+
 uint16_t g_powcmd;
 
 static void doit(uint16_t req_type);
@@ -52,7 +54,7 @@ int power_schedule(struct request *req, struct sstate *state)
 
 	if (GET_FORCE_BIT(req->req_type) == 0) {
 		PDEBUG("[-] no force bit\n");
-		if (!confirm_shutdown()) {
+		if (!confirm_shutdown(req, CONFIRM_TIMEOUT)) {
 			PDEBUG("[-] shutdown cancelled by user\n");
 			return scheduled;
 		}
