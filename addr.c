@@ -71,7 +71,7 @@ int addr_create(int family, struct sockaddr *addr, size_t *addrsize, char *ip)
 int get_bcast(int family, char *ifname, struct sockaddr *addr, size_t *addrsize)
 {
 	struct ifaddrs *ifaddr;
-	int fam, ret = -1;
+	int fam, ret = -1, exists = 0;
 	char host[NI_MAXHOST];
 
 	if (getifaddrs(&ifaddr) == -1) {
@@ -84,6 +84,7 @@ int get_bcast(int family, char *ifname, struct sockaddr *addr, size_t *addrsize)
 		fam = ifa->ifa_addr->sa_family;
 		if (strcmp(ifa->ifa_name, ifname))
 			continue;
+		exists = 1;	// If we have reached here, the ifname exists
 		if (fam == family) {
 			if (fam == AF_INET || AF_INET6) {
 				if (!ifa->ifa_broadaddr) {
@@ -99,5 +100,7 @@ int get_bcast(int family, char *ifname, struct sockaddr *addr, size_t *addrsize)
 		}
 	}
 	freeifaddrs(ifaddr);
+	if (!exists)
+		fprintf(stderr, "invalid interface name: %s\n", ifname);
 	return ret;
 }
