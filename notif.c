@@ -17,7 +17,7 @@ int confirm_shutdown(struct request *req, unsigned int timeout)
 	RESET_FORCE_BIT(req_type);
 	if (reqstr(req_type, msg, sizeof(msg)) == NULL) {
 		PDEBUG("[*] invalid request type: %x\n", req_type);
-		return;
+		return 0;
 	}
 	snprintf(cmd, sizeof(cmd),
 			"zenity --question \
