@@ -9,7 +9,7 @@
 #include "notif.h"
 #include "power.h"
 
-#define CONFIRM_TIMEOUT	30
+#define CONFIRM_TIMEOUT	10
 
 uint16_t g_powcmd;
 
