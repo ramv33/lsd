@@ -177,7 +177,7 @@ int create_socket(int domain, int port)
 
 	addr.sin_family = domain;
 	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	if (setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) == -1) {
 		perror("setsockopt(SO_REUSEPORT) failed");
 		fprintf(stderr, "continuing..\n");
