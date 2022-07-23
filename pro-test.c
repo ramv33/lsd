@@ -5,7 +5,7 @@
 
 #include "common.h"
 #include "protocol.h"
-#include "protocol.h"
+#include "auth.h"
 
 int sstate_pack_unpack_test(void);
 int request_pack_unpack_test(void);
@@ -36,6 +36,7 @@ main(void)
 int request_pack_unpack_test(void)
 {
 	char before[256], after[256];
+	size_t size;
 	time_t t = time(NULL);
 	struct request req = {
 		.when = t,
@@ -44,10 +45,18 @@ int request_pack_unpack_test(void)
 		.msg_size = 6,
 		.msg = "hello"
 	};
-	size_t size;
+
+	/* signature stuff */
+	unsigned char sig[192];
+	size_t sigsize = 0, sigstart;
+
 	sprintf(before, "%lld %x %x %d",
 		req.when, req.req_type, req.timer, req.msg_size);
 	char *reqbuf = pack_request(&req, &size);
+	sigstart = size;
+	sign_request(reqbuf, &size, &sigsize, "pvtkey.pem");
+	printf("reqbuf size after signing: %zu\n", size);
+
 
 	PDEBUG("REQUEST\n=======\n");
 	PDEBUG("\nwhen = %lld\n"
@@ -56,13 +65,25 @@ int request_pack_unpack_test(void)
 		"msg_size = %d\n",
 		req.when, req.req_type, req.timer, req.msg_size);
 
+	printf("SIGNATURE INFO\n===========\n"
+		"sigsize = %zd\nsignature:\n", sigsize);
+	for (int i = 0; i < sigsize; ++i)
+		printf("%02hhx", reqbuf[sigstart+i]);
+	puts("");
+
 	for (int i = 0; i < size; ++i)
 		PDEBUG("%02hhx ", reqbuf[i]);
 	PDEBUG("\n=========\n");
 
-	unpack_request_fixed(&req, reqbuf);
+	char *rp = unpack_request_fixed(&req, reqbuf);
+	req.msg = strdup(rp);		// copy message string
+	rp += strlen(req.msg)+1;	// move past message string
+	unpack_signature(&req.sig, rp);
+	if (verifysig("pubkey.pem", reqbuf, size, req.sig.sig, &sigsize))
+		printf("verification successful!!!\n");
 	sprintf(after, "%lld %x %x %d",
-		req.when, req.req_type, req.timer, req.msg_size, req.msg);
+		req.when, req.req_type, req.timer, req.msg_size);
+
 	free(reqbuf);
 
 	return !strcmp(before, after);

@@ -12,6 +12,8 @@
 #include "protocol.h"
 #include "power.h"
 #include "daemon.h"
+#include "auth.h"
+#include "notif.h"
 
 #define BUFFSIZE	2048
 #define RXBUF_SIZE	BUFFSIZE
@@ -55,7 +57,7 @@ out:
 
 int receive_requests(int sockfd)
 {
-	char rxbuf[RXBUF_SIZE], txbuf[TXBUF_SIZE];
+	char rxbuf[RXBUF_SIZE], txbuf[TXBUF_SIZE], *rp;
 	char addrstr[INET_ADDRSTRLEN];
 	ssize_t ret;
 	struct sockaddr_in cliaddr;
@@ -73,16 +75,30 @@ int receive_requests(int sockfd)
 		PDEBUG("received %zd bytes from %s:%d\n", ret,
 			inet_ntop(AF_INET, &cliaddr.sin_addr, addrstr, sizeof(addrstr)),
 			ntohs(cliaddr.sin_port));
-		unpack_request_fixed(&req, rxbuf);
+		/* rp points past the fixed part, i.e to the message part */
+		rp = unpack_request_fixed(&req, rxbuf);
 		PDEBUG("request\n=======\n"
 			"when = %ld\ntimer=%d\nreq_type=%x\nmsg_size = %d\n",
 			req.when, req.timer, req.req_type, req.msg_size);
 		/* receive message */
 		if (req.msg_size > 0) {
-			req.msg = strdup(rxbuf+REQUEST_FIXED_SIZE);
+			req.msg = strdup(rp);
 			PDEBUG("msg = '%s'\n", req.msg);
+		} else {
+			req.msg = NULL;
+		}
+		rp += req.msg_size;
+		unpack_signature(&req.sig, rp);
+		size_t sigsize = req.sig.sigsize;
+		if (!verifysig("pubkey.pem", rxbuf, REQUEST_FIXED_SIZE+req.msg_size,
+				req.sig.sig, &sigsize)) {
+			printf("client verification failed!\n");
+			printf("discarding request\n");
+			goto end;
 		}
 		handle_request(&req);
+	end:
+		free(req.msg);
 	}
 }
 
@@ -121,6 +137,7 @@ int handle_request(struct request *req)
 		break;
 	case REQ_NOTIFY:
 		PDEBUG("notify\n");
+		send_notification(req);
 		/* send notification to user (req->msg) */
 		return 0;
 	case REQ_QUERY:
@@ -163,7 +180,7 @@ int create_socket(int domain, int port)
 
 	addr.sin_family = domain;
 	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	if (setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) == -1) {
 		perror("setsockopt(SO_REUSEPORT) failed");
 		fprintf(stderr, "continuing..\n");

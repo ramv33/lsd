@@ -15,7 +15,8 @@
 #include "protocol.h"
 #include "addr.h"
 
-#define	DEFAULT_PORT	6969	// TODO: move this into a common header file
+#define DEFAULT_PORT	6969	// TODO: move this into a common header file
+#define DEFAULT_TIMER	5
 
 struct {
 	int		port;		/* port number */
@@ -24,55 +25,55 @@ struct {
 	int32_t		timer;		/* shutdown timer */
 	char		*ifname;	/* interface name */
 	char		*msg;		/* notification message to send to server */
+	char		*pvtkey;	/* private key */
 	int		timeout;	/* timeout while waiting for ack */
 	int		ntries;		/* no of times to resend when ack not received */
+	int		broadcast;	/* 1 if broadcast, else 0 */
 	bool		ipv6;		/* true if IPv6 */
-	bool		broadcast;	/* true if broadcast */
 	bool		force;		/* force action, do not wait for user input */
 } argopts;
 
 static void parse_args(int *argc, char *argv[]);
-static void usage(void);
+static void usage(char *pgmname);
 
 int create_socket(int domain, bool bcast);
 int fill_request(struct request *req);
-int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t count);
+int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t num_ips);
 
 int main(int argc, char *argv[])
 {
 	struct sockaddr_in *addrs;
 	size_t addrsize = sizeof(*addrs);
-	int sockfd, ret = 0, count;
+	int sockfd, ret = 0, num_ips;
 	char ipstr[INET6_ADDRSTRLEN];
 	struct request req;
 
 	parse_args(&argc, argv);
 
-	count = argc - argopts.targets_i;
-	PDEBUG("nips = %d\n", count);
-	if (argopts.broadcast) {
-		PDEBUG("[-] %d addresses specified; broadcast enabled.\n", count);
-		++count;
-	}
-	addrs = malloc(sizeof(*addrs) * count);
+	num_ips = argc - argopts.targets_i;
+	PDEBUG("nips = %d\n", num_ips);
+
+	if (argopts.broadcast)
+		PDEBUG("[-] %d addresses specified; broadcast enabled.\n", num_ips);
+	addrs = malloc(sizeof(*addrs) * (num_ips + argopts.broadcast));
+
 	if (argopts.broadcast) {
 		ret = get_bcast(AF_INET, argopts.ifname, (struct sockaddr *)addrs, &addrsize);
 		if (ret == -1) {
-			if (!addrsize) {
+			if (!addrsize)
 				printf("no bcast for iface: %s\n", argopts.ifname);
-				goto out;
-			}
-		}
-	} else {
-		if (addr_create_array(AF_INET, (struct sockaddr *)addrs, &addrsize,
-					&argv[argopts.targets_i], count) == -1) {
-			fprintf(stderr, "address creation failed\n");
-			ret = 1;
 			goto out;
 		}
 	}
+	/* If bcast was also specified, the bcast address is in addrs[0], and we start from addrs[1] */
+	if (addr_create_array(AF_INET, (struct sockaddr *)addrs + argopts.broadcast, &addrsize,
+				&argv[argopts.targets_i], num_ips) == -1) {
+		fprintf(stderr, "address creation failed\n");
+		ret = 1;
+		goto out;
+	}
 
-	for (int i = 0; i < count; ++i) {
+	for (int i = 0; i < num_ips + argopts.broadcast; ++i) {
 		addrs[i].sin_port = htons(argopts.port);
 #ifdef DEBUG
 		if (inet_ntop(AF_INET, &addrs[i].sin_addr, ipstr, sizeof(ipstr)))
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
 		req.when, req.req_type, req.timer, req.msg_size,
 		(req.msg_size != 0) ? req.msg : "");
 	sockfd = create_socket(AF_INET, argopts.broadcast);
-	send_request(sockfd, &req, addrs, count);
+	send_request(sockfd, &req, addrs, num_ips + argopts.broadcast);
 out:
 	free(addrs);
 	return ret;
@@ -122,10 +123,10 @@ int fill_request(struct request *req)
 	req->when = time(NULL);
 }
 
-int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t count)
+int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, size_t num_ips)
 {
 	unsigned char *payload;
-	size_t payload_size;
+	size_t payload_size, sigsize;
 	ssize_t ret;
 	char ipstr[INET6_ADDRSTRLEN];
 
@@ -134,7 +135,13 @@ int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, siz
 		perror("allocating payload failed");
 		return -1;
 	}
-	for (int i = 0; i < count; ++i) {
+	/* sign message */
+	if (!sign_request(payload, &payload_size, &sigsize, argopts.pvtkey)) {
+		fprintf(stderr, "error signing request\n");
+		return -1;
+	}
+
+	for (int i = 0; i < num_ips; ++i) {
 		ret = sendto(sockfd, payload, payload_size, 0,
 				(struct sockaddr *)&addrs[i], sizeof(*addrs));
 #		ifdef DEBUG
@@ -175,21 +182,25 @@ static void parse_args(int *argc, char *argv[])
 {
 	int c;
 
+	argopts.timer = DEFAULT_TIMER;
 	argopts.port = DEFAULT_PORT;
+	argopts.pvtkey = "pvtkey.pem";
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},
-		{"timeout", required_argument, NULL, 't'},
-		{"timer", required_argument, NULL, 'T'},
+		{"key", required_argument, NULL, 'k'},
+		{"timer", required_argument, NULL, 't'},
+		{"timeout", required_argument, NULL, 'T'},
 		{"tries", required_argument, NULL, 'n'},
 		{"request", required_argument, NULL, 'r'},
 		{"interface", required_argument, NULL, 'i'},
 		{"message", required_argument, NULL, 'm'},
+		{"timeout", required_argument, NULL, 'T'},
 		{"broadcast", no_argument, NULL, 'b'},
 		{"ipv6", no_argument, NULL, '6'},
 		{NULL, 0, NULL, 0}
 	};
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:t:T:n:r:i:m:bf6", long_options, NULL))
+		if ((c = getopt_long(*argc, argv, "p:k:t:T:n:r:i:m:bf6", long_options, NULL))
 				== -1)
 			break;
 		switch (c) {
@@ -200,6 +211,10 @@ static void parse_args(int *argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 			PDEBUG("port=%d\n", argopts.port);
+			break;
+		case 'k':
+			argopts.pvtkey = optarg;
+			PDEBUG("pvtkey='%s'\n", argopts.pvtkey);
 			break;
 		case 't':
 			argopts.timer = strtol(optarg, NULL, 10);
@@ -235,12 +250,13 @@ static void parse_args(int *argc, char *argv[])
 			PDEBUG("message='%s'\n", argopts.msg);
 			break;
 		case 'b':
-			argopts.broadcast = true;
+			argopts.broadcast = 1;
 			PDEBUG("broadcast\n");
 			break;
 		case 'f':
 			argopts.force = true;
 			PDEBUG("force\n");
+			break;
 		case '6':
 			argopts.ipv6 = true;
 			PDEBUG("ipv6\n");
@@ -258,18 +274,33 @@ static void parse_args(int *argc, char *argv[])
 		argopts.targets_i = optind;
 		if (!argopts.broadcast) {
 			fprintf(stderr, "usage error: destination address required\n");
-			usage();
+			usage(argv[0]);
 			/* usage exits from program */
 		}
 	}
 	if (!argopts.request) {
 		fprintf(stderr, "usage error: -r argument is mandatory\n");
-		usage();
+		usage(argv[0]);
 	}
 }
 
-void usage(void)
+void usage(char *pgmname)
 {
-	puts("TODO: usage");
+	printf(
+	"\nUsage: %s [options] ip(s)\n\n"
+	"-p, --port=PORT           specify port number of daemon on server\n"
+	"\n"
+	"-t, --timer=SECONDS       when to schedule command\n"
+	"\n"
+	"-r, --request=REQ         specify the request to send to server; valid options are\n"
+	"                          shutdown, reboot, standby, hibernate, sleep, abort, notify, query\n"
+	"\n"
+	"-b, --broadcast           broadcast request on network out of given interface\n"
+	"                          NOTE: interface must be specified (-i) when using this flag\n"
+	"\n"
+	"-i, --interface=IFNAME    specify network interface to use for sending broadcast message\n"
+	"\n"
+	"-m, --message=MSG         message to send for notification on server\n\n"
+	, pgmname);
 	exit(EXIT_FAILURE);
 }

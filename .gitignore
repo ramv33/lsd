@@ -2,7 +2,7 @@
 # executable files
 client
 server
-p
+pro-test
 # certificate
 *.pem
 *.pem
