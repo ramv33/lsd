@@ -49,7 +49,7 @@ int verifysig(const char *pubkey, unsigned char *buf, size_t bufsize,
 
 	if ((fp = fopen(pubkey, "r")) == NULL) {
 		perror("fopen");
-		return -1;
+		return 0;
 	}
 	ec_key = PEM_read_EC_PUBKEY(fp, NULL, NULL, NULL);
 	fclose(fp);
