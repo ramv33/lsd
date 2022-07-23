@@ -1,16 +1,15 @@
+# Meant to be run as a user unit
+# It requires DISPLAY and XAUTHORITY, which is handled by systemd for user units
+# Put in ~/.config/systemd/user
+# Run as systemctl --user start/enable lsd
 [Unit]
 Description=Lan Shutdown Daemon to remotely shut down systems
-Requires=network.target
+Wants=network.target
 DefaultDependencies=no
 
 [Service]
-Environment="DISPLAY=:0"
-# is there no other way? :/
-Environment="XAUTHORITY=/home/rmn/.Xauthority"
-#StandardError=file:/var/log/mini.log
-#StandardOutput=file:/var/log/mini.log
-ExecStart=/home/rmn/Documents/mini/lsd/d/server
-#Type=forking
+# replace with your desired path after copying it there
+ExecStart=~/.local/bin/lsd
 
 [Install]
 WantedBy=multi-user.target
