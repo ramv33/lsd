@@ -4,9 +4,14 @@ Requires=network.target
 DefaultDependencies=no
 
 [Service]
-Type=simple
+Environment="DISPLAY=:0"
+# is there no other way? :/
+Environment="XAUTHORITY=/home/rmn/.Xauthority"
+#StandardError=file:/var/log/mini.log
+#StandardOutput=file:/var/log/mini.log
 ExecStart=/home/rmn/Documents/mini/lsd/d/server
-User=root
+#Type=forking
 
 [Install]
 WantedBy=multi-user.target
+WantedBy=graphical.target
