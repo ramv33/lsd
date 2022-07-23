@@ -39,8 +39,6 @@ int main(int argc, char *argv[])
 	bool is_server = true;
 	ssize_t ret;
 
-	daemonize();
-
 	parse_args(&argc, argv);
 
 	sockfd = create_socket(AF_INET, argopts.port);
