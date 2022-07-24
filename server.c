@@ -203,11 +203,12 @@ static void parse_args(int *argc, char *argv[])
 
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},
+		{"pubkey", required_argument, NULL, 'k'},
 		{"ipv6", no_argument, NULL, '6'}
 	};
 
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:6", long_options, NULL)) == -1)
+		if ((c = getopt_long(*argc, argv, "p:k:6", long_options, NULL)) == -1)
 			break;
 		switch (c) {
 		case 'p':
@@ -217,6 +218,10 @@ static void parse_args(int *argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 			printf("port=%d\n", argopts.port);
+			break;
+		case 'k':
+			argopts.pubkey = optarg;
+			printf("pubkey='%s'\n", argopts.pubkey);
 			break;
 		case '6':
 			argopts.ipv6 = true;
