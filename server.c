@@ -21,6 +21,7 @@
 
 static struct {
 	int port;
+	char *pubkey;
 	bool ipv6;
 } argopts;
 
@@ -88,7 +89,7 @@ int receive_requests(int sockfd)
 		rp += req.msg_size;
 		unpack_signature(&req.sig, rp);
 		size_t sigsize = req.sig.sigsize;
-		if (!verifysig("pubkey.pem", rxbuf, REQUEST_FIXED_SIZE+req.msg_size,
+		if (!verifysig(argopts.pubkey, rxbuf, REQUEST_FIXED_SIZE+req.msg_size,
 				req.sig.sig, &sigsize)) {
 			printf("client verification failed!\n");
 			printf("discarding request\n");
@@ -198,6 +199,7 @@ static void parse_args(int *argc, char *argv[])
 
 	/* setting defaults */
 	argopts.port = DEFAULT_PORT;
+	argopts.pubkey = DEFAULT_PUBKEY;
 
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},

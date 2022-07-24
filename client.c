@@ -184,7 +184,7 @@ static void parse_args(int *argc, char *argv[])
 
 	argopts.timer = DEFAULT_TIMER;
 	argopts.port = DEFAULT_PORT;
-	argopts.pvtkey = "pvtkey.pem";
+	argopts.pvtkey = DEFAULT_PVTKEY;
 	static struct option long_options[] = {
 		{"port", required_argument, NULL, 'p'},
 		{"key", required_argument, NULL, 'k'},

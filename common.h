@@ -12,4 +12,7 @@
 
 #define DEFAULT_PORT	6969
 
+#define DEFAULT_PUBKEY	"/etc/lsd/pubkey.pem"
+#define DEFAULT_PVTKEY	"/etc/lsd/pvtkey.pem"
+
 #endif /* ifndef COMMON_H */
