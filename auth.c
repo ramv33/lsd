@@ -16,7 +16,8 @@ int signbuf(const char *keyfile, unsigned char *buf, size_t bufsize,
 
 	*siglen = 0;
 	if ((keyfp = fopen(keyfile, "r")) == NULL) {
-		perror("fopen");
+		fprintf(stderr, "error opening private key '%s' for signing: %s\n",
+			keyfile, strerror(errno));
 		return -1;
 	}
 	ec_key = PEM_read_ECPrivateKey(keyfp, NULL, NULL, NULL);
@@ -48,9 +49,11 @@ int verifysig(const char *pubkey, unsigned char *buf, size_t bufsize,
 	EC_KEY *ec_key;
 
 	if ((fp = fopen(pubkey, "r")) == NULL) {
-		perror("fopen");
+		fprintf(stderr, "error opening public key '%s' for verification: %s\n",
+			pubkey, strerror(errno));
 		return 0;
 	}
+	printf("opened public key '%s' successfully\n", pubkey);
 	ec_key = PEM_read_EC_PUBKEY(fp, NULL, NULL, NULL);
 	fclose(fp);
 
