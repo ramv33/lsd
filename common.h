@@ -8,6 +8,8 @@
 #	define PDEBUG(fmt, args...)	/* not debugging: do nothin */
 #endif /* endif DEBUG */
 
+#define printfv(fmt, args...)	printf((argopts.verbose) ? fmt : "", ## args)
+
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 
 #define DEFAULT_PORT	6969
