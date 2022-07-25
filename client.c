@@ -302,7 +302,7 @@ void usage(char *pgmname)
 	"-t, --timer=SECONDS       when to schedule command\n"
 	"\n"
 	"-r, --request=REQ         specify the request to send to server; valid options are\n"
-	"                          shutdown, reboot, standby, hibernate, sleep, abort, notify, query\n"
+	"                          shutdown, reboot, hibernate, sleep, abort, notify\n"
 	"\n"
 	"-b, --broadcast           broadcast request on network out of given interface\n"
 	"                          NOTE: interface must be specified (-i) when using this flag\n"
