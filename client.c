@@ -29,6 +29,7 @@ struct {
 	int		timeout;	/* timeout while waiting for ack */
 	int		ntries;		/* no of times to resend when ack not received */
 	int		broadcast;	/* 1 if broadcast, else 0 */
+	bool		verbose;	/* talk more */
 	bool		ipv6;		/* true if IPv6 */
 	bool		force;		/* force action, do not wait for user input */
 } argopts;
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
 	PDEBUG("nips = %d\n", num_ips);
 
 	if (argopts.broadcast)
-		PDEBUG("[-] %d addresses specified; broadcast enabled.\n", num_ips);
+		printfv("broadcast enabled.\n", num_ips);
 	addrs = malloc(sizeof(*addrs) * (num_ips + argopts.broadcast));
 
 	if (argopts.broadcast) {
@@ -198,7 +199,7 @@ static void parse_args(int *argc, char *argv[])
 		{NULL, 0, NULL, 0}
 	};
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:k:t:T:n:r:i:m:bf6", long_options, NULL))
+		if ((c = getopt_long(*argc, argv, "p:k:t:T:n:r:i:m:bvf6", long_options, NULL))
 				== -1)
 			break;
 		switch (c) {
@@ -258,6 +259,10 @@ static void parse_args(int *argc, char *argv[])
 		case '6':
 			argopts.ipv6 = true;
 			PDEBUG("ipv6\n");
+			break;
+		case 'v':
+			argopts.verbose = true;
+			PDEBUG("verbose\n");
 			break;
 		}
 	}
