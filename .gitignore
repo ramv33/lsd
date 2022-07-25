@@ -6,3 +6,5 @@ pro-test
 # certificate
 *.pem
 *.pem
+#
+snippets/
