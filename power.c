@@ -73,7 +73,7 @@ int power_schedule(struct request *req, struct sstate *state)
 	PDEBUG("[+] cancelled any pending alarm\n");
 	if (sigaction(SIGALRM, &act, NULL) < 0) {
 		perror("sigaction: error setting SIGALRM handler");
-		return -1;
+		return 0;
 	}
 	PDEBUG("[+] signal handler registered\n");
 
