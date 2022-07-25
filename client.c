@@ -109,7 +109,7 @@ int fill_request(struct request *req)
 	}
 	if (argopts.force) {
 		SET_FORCE_BIT(req->req_type);
-		PDEBUG("set force bit: req_type = %x\n", req->req_type);
+		printfv("set force bit: req_type = %x\n", req->req_type);
 	}
 	if (argopts.timer < 0) {
 		fprintf(stderr, "invalid timer value %d\n", argopts.timer);
@@ -199,10 +199,14 @@ static void parse_args(int *argc, char *argv[])
 		{NULL, 0, NULL, 0}
 	};
 	while (1) {
-		if ((c = getopt_long(*argc, argv, "p:k:t:T:n:r:i:m:bvf6", long_options, NULL))
+		if ((c = getopt_long(*argc, argv, "vp:k:t:T:n:r:i:m:bf6", long_options, NULL))
 				== -1)
 			break;
 		switch (c) {
+		case 'v':
+			argopts.verbose = true;
+			PDEBUG("verbose\n");
+			break;
 		case 'p':
 			argopts.port = strtol(optarg, NULL, 10);
 			if (argopts.port <= 0) {
@@ -214,6 +218,7 @@ static void parse_args(int *argc, char *argv[])
 		case 'k':
 			argopts.pvtkey = optarg;
 			PDEBUG("pvtkey='%s'\n", argopts.pvtkey);
+			printfv("pvtkey='%s'\n", argopts.pvtkey);
 			break;
 		case 't':
 			argopts.timer = strtol(optarg, NULL, 10);
@@ -238,6 +243,7 @@ static void parse_args(int *argc, char *argv[])
 		case 'r':
 			argopts.request = optarg;
 			PDEBUG("request='%s'\n", argopts.request);
+			printfv("request='%s'\n", argopts.request);
 			break;
 		case 'i':
 			argopts.ifname = optarg;
@@ -247,6 +253,7 @@ static void parse_args(int *argc, char *argv[])
 			argopts.msg = optarg;
 			/* NOTE: not copying */
 			PDEBUG("message='%s'\n", argopts.msg);
+			printfv("message='%s'\n", argopts.msg);
 			break;
 		case 'b':
 			argopts.broadcast = 1;
@@ -259,10 +266,6 @@ static void parse_args(int *argc, char *argv[])
 		case '6':
 			argopts.ipv6 = true;
 			PDEBUG("ipv6\n");
-			break;
-		case 'v':
-			argopts.verbose = true;
-			PDEBUG("verbose\n");
 			break;
 		}
 	}
