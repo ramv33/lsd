@@ -33,13 +33,13 @@ static void doit(uint16_t req_type)
 		system("shutdown -r now");
 		break;
 	case REQ_POW_STANDBY:
-		PDEBUG("[-] standby\n");
-		break;
 	case REQ_POW_SLEEP:
-		PDEBUG("[-] sleeping\n");
+		PDEBUG("[-] standby\n");
+		system("systemctl suspend");
 		break;
 	case REQ_POW_HIBERNATE:
 		PDEBUG("[-] hibernate\n");
+		system("systemctl hibernate");
 		break;
 	}
 
