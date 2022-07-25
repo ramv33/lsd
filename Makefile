@@ -1,5 +1,3 @@
-DEBUG = y
-
 OBJS = protocol.o addr.o power.o notif.o daemon.o auth.o
 LIBS = -lssl -lcrypto
 
