@@ -93,6 +93,9 @@ int main(int argc, char *argv[])
 		".msg = '%s'\n",
 		req.when, req.req_type, req.timer, req.msg_size,
 		(req.msg_size != 0) ? req.msg : "");
+	printfv("timestamp = %ld\n"
+		"pvtkey    = '%s'\n",
+		req.when, argopts.pvtkey);
 	sockfd = create_socket(AF_INET, argopts.broadcast);
 	send_request(sockfd, &req, addrs, num_ips + argopts.broadcast);
 out:
