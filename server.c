@@ -164,6 +164,7 @@ int handle_request(struct request *req)
 			".when = %ld\n.issued_at = %ld\n.powcmd = %x\n .timer = %d\n", 
 			state.when, state.issued_at, state.powcmd, state.timer);
 	}
+	return 0;
 }
 
 int create_socket(int domain, int port)
