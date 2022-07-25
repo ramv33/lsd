@@ -144,11 +144,9 @@ int send_request(int sockfd, struct request *req, struct sockaddr_in *addrs, siz
 	for (int i = 0; i < num_ips; ++i) {
 		ret = sendto(sockfd, payload, payload_size, 0,
 				(struct sockaddr *)&addrs[i], sizeof(*addrs));
-#		ifdef DEBUG
 		if (inet_ntop(AF_INET, &addrs[i].sin_addr, ipstr, sizeof(ipstr)))
 			printf("sent payload (%zd bytes) to %s\n", ret, ipstr);
 
-#		endif
 		if (ret == -1) {
 			perror("error sending payload");
 			continue;
