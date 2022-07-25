@@ -310,6 +310,7 @@ void usage(char *pgmname)
 	"-i, --interface=IFNAME    specify network interface to use for sending broadcast message\n"
 	"\n"
 	"-m, --message=MSG         message to send for notification on server\n\n"
+	"-k, --key=pvtkey          private key to use for signing message\n\n"
 	, pgmname);
 	exit(EXIT_FAILURE);
 }
