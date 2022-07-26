@@ -26,16 +26,20 @@ static void doit(uint16_t req_type)
 	switch (req_type) {
 	case REQ_POW_SHUTDOWN:
 		PDEBUG("[-] shutting down\n");
+		system("systemctl poweroff");
 		break;
 	case REQ_POW_REBOOT:
 		PDEBUG("[-] rebooting\n");
+		system("systemctl reboot");
 		break;
 	case REQ_POW_STANDBY:
 	case REQ_POW_SLEEP:
 		PDEBUG("[-] standby\n");
+		system("systemctl suspend");
 		break;
 	case REQ_POW_HIBERNATE:
 		PDEBUG("[-] hibernate\n");
+		system("systemctl hibernate");
 		break;
 	}
 
